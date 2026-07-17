@@ -1,14 +1,18 @@
-《Ai》演出顺序全本
-============================================================
-双向同步规则：
-1. 你改本 txt → 运行: python3 Ai/tools/sync_script.py split
-2. Agent/库改 MD → 运行: python3 Ai/tools/sync_script.py build
-3. 不要删除 <<<SYNC ...>>> / <<<END SYNC ...>>> 标记行
-4. 标注规范：【立绘】（演出/UI）"对白"
-============================================================
+# 《Ai》演出顺序全本
 
-<<<SYNC id="prologue" file="script/00_Prologue.md">>>
-### PROLOGUE｜序章
+> 按真实演出顺序排列的完整剧本。在 GitHub 上直接预览 / 编辑本文件即可。
+
+## 双向同步
+
+1. 你改本文件 → `python3 Ai/tools/sync_script.py split`（写回 `script/*.md`）
+2. Agent 改分章 MD → `python3 Ai/tools/sync_script.py build`（刷新本文件）
+3. **不要删除** HTML 注释里的 `<<<SYNC>>>` / `<<<END SYNC>>>` 标记
+4. 标注：`【立绘】` `（演出/UI）` `"对白"`
+
+---
+
+<!-- <<<SYNC id="prologue" file="script/00_Prologue.md">>> -->
+## PROLOGUE｜序章
 
 # Prologue｜序章
 
@@ -133,10 +137,10 @@
 - True End 后应回收为：她在故事开始前就知道，总有人会按下继续，总有人会离开今天。
 - 这是整部作品的第一个泪点，也将是最后一个泪点。
 - 不要在序章解释任何一句。
-<<<END SYNC id="prologue">>>
+<!-- <<<END SYNC id="prologue">>> -->
 
-<<<SYNC id="ch1_header" file="script/01_Chapter1.md">>>
-### CHAPTER 1｜认识一个人的错误方式（章头）
+<!-- <<<SYNC id="ch1_header" file="script/01_Chapter1.md">>> -->
+## CHAPTER 1｜认识一个人的错误方式（章头）
 
 # Chapter 1｜认识一个人的错误方式
 
@@ -148,10 +152,10 @@
 所有废萌必须可被后期回收。参见 `design/02_Foreshadowing_Table.md`。
 
 ---
-<<<END SYNC id="ch1_header">>>
+<!-- <<<END SYNC id="ch1_header">>> -->
 
-<<<SYNC id="ch1_day1" file="script/01_Chapter1.md">>>
-### Ch1 Day1｜撞见
+<!-- <<<SYNC id="ch1_day1" file="script/01_Chapter1.md">>> -->
+## Ch1 Day1｜撞见
 
 ## Day 1｜撞见
 
@@ -375,10 +379,10 @@
 （——而这正是这一章最需要的错觉。）
 
 ---
-<<<END SYNC id="ch1_day1">>>
+<!-- <<<END SYNC id="ch1_day1">>> -->
 
-<<<SYNC id="ch1_insert_a" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert A｜Day1 夜
+<!-- <<<SYNC id="ch1_insert_a" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert A｜Day1 夜
 
 ## Insert A｜Day 1 夜（接 1-5 分别之后）
 
@@ -408,10 +412,10 @@
 像一颗还没有落点的音。
 
 ---
-<<<END SYNC id="ch1_insert_a">>>
+<!-- <<<END SYNC id="ch1_insert_a">>> -->
 
-<<<SYNC id="ch1_insert_b" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert B｜Day2 扫除
+<!-- <<<SYNC id="ch1_insert_b" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert B｜Day2 扫除
 
 ## Insert B｜Day 2 午前・扫除（接 Day 2 便利店之前）
 
@@ -458,10 +462,10 @@
 我点头。于是才有后来的两根冰棒。
 
 ---
-<<<END SYNC id="ch1_insert_b">>>
+<!-- <<<END SYNC id="ch1_insert_b">>> -->
 
-<<<SYNC id="ch1_day2" file="script/01_Chapter1.md">>>
-### Ch1 Day2｜两根冰棒
+<!-- <<<SYNC id="ch1_day2" file="script/01_Chapter1.md">>> -->
+## Ch1 Day2｜两根冰棒
 
 ## Day 2｜两根冰棒（F01）
 
@@ -587,10 +591,10 @@
 却觉得自己好像也被折成了一个环。
 
 ---
-<<<END SYNC id="ch1_day2">>>
+<!-- <<<END SYNC id="ch1_day2">>> -->
 
-<<<SYNC id="ch1_insert_c" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert C｜Day2 夜
+<!-- <<<SYNC id="ch1_insert_c" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert C｜Day2 夜
 
 ## Insert C｜Day 2 夜・第二根的余味（接 2-3 吸管纸之后）
 
@@ -618,10 +622,10 @@
 然后觉得自己傻，又觉得——被她看见也不坏。
 
 ---
-<<<END SYNC id="ch1_insert_c">>>
+<!-- <<<END SYNC id="ch1_insert_c">>> -->
 
-<<<SYNC id="ch1_insert_d" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert D｜Day3 课间
+<!-- <<<SYNC id="ch1_insert_d" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert D｜Day3 课间
 
 ## Insert D｜Day 3 课间・普通同学戏（接 3-1 数云之前）
 
@@ -654,10 +658,10 @@
 （老师走进来。她把纸环收好，动作轻得像收藏一件易碎的证物。）
 
 ---
-<<<END SYNC id="ch1_insert_d">>>
+<!-- <<<END SYNC id="ch1_insert_d">>> -->
 
-<<<SYNC id="ch1_day3" file="script/01_Chapter1.md">>>
-### Ch1 Day3｜云与猫
+<!-- <<<SYNC id="ch1_day3" file="script/01_Chapter1.md">>> -->
+## Ch1 Day3｜云与猫
 
 ## Day 3｜云与猫（F02 / F05）
 
@@ -763,10 +767,10 @@
 不知道她在跟猫道別，还是在跟某种更软的东西道別。
 
 ---
-<<<END SYNC id="ch1_day3">>>
+<!-- <<<END SYNC id="ch1_day3">>> -->
 
-<<<SYNC id="ch1_insert_e" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert E｜猫后续
+<!-- <<<SYNC id="ch1_insert_e" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert E｜猫后续
 
 ## Insert E｜Day 3 傍晚・猫的后续（接 3-2 之后）
 
@@ -806,10 +810,10 @@
 "嗯。那我们互相看一会儿。很短的一会儿也行。"
 
 ---
-<<<END SYNC id="ch1_insert_e">>>
+<!-- <<<END SYNC id="ch1_insert_e">>> -->
 
-<<<SYNC id="ch1_insert_f" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert F｜图书馆
+<!-- <<<SYNC id="ch1_insert_f" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert F｜图书馆
 
 ## Insert F｜Day 4 午前・图书馆（接 4-1 贩卖机之前）
 
@@ -852,10 +856,10 @@
 （无论哪个：她都跟你并排翻了十分钟。伪分支只改 Ch2 一句回忆。）
 
 ---
-<<<END SYNC id="ch1_insert_f">>>
+<!-- <<<END SYNC id="ch1_insert_f">>> -->
 
-<<<SYNC id="ch1_day4" file="script/01_Chapter1.md">>>
-### Ch1 Day4｜饮料与回家路
+<!-- <<<SYNC id="ch1_day4" file="script/01_Chapter1.md">>> -->
+## Ch1 Day4｜饮料与回家路
 
 ## Day 4｜饮料与回家路（伪分支日）
 
@@ -964,10 +968,10 @@
 （——两种都温柔。不拍时她的笑更真一点：给高 Recognition 玩家的无声奖励。）
 
 ---
-<<<END SYNC id="ch1_day4">>>
+<!-- <<<END SYNC id="ch1_day4">>> -->
 
-<<<SYNC id="ch1_insert_g" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert G｜消息
+<!-- <<<SYNC id="ch1_insert_g" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert G｜消息
 
 ## Insert G｜Day 4 夜・电话／消息（可选短场景）
 
@@ -994,10 +998,10 @@
 （——仍像电波情话。第一次只觉可爱。）
 
 ---
-<<<END SYNC id="ch1_insert_g">>>
+<!-- <<<END SYNC id="ch1_insert_g">>> -->
 
-<<<SYNC id="ch1_insert_h" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert H｜体育仓库
+<!-- <<<SYNC id="ch1_insert_h" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert H｜体育仓库
 
 ## Insert H｜Day 5 午前・体育仓库（接 5-1 镜子之前）
 
@@ -1039,10 +1043,10 @@
 我一边吐槽一边把球抱出来，一边把这句话收下。
 
 ---
-<<<END SYNC id="ch1_insert_h">>>
+<!-- <<<END SYNC id="ch1_insert_h">>> -->
 
-<<<SYNC id="ch1_day5" file="script/01_Chapter1.md">>>
-### Ch1 Day5｜镜子与夕阳
+<!-- <<<SYNC id="ch1_day5" file="script/01_Chapter1.md">>> -->
+## Ch1 Day5｜镜子与夕阳
 
 ## Day 5｜镜子与夕阳（F09 / F10）
 
@@ -1133,10 +1137,10 @@
 （——短发伏笔。轻到应被忘掉。）
 
 ---
-<<<END SYNC id="ch1_day5">>>
+<!-- <<<END SYNC id="ch1_day5">>> -->
 
-<<<SYNC id="ch1_insert_i" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert I｜Day5 夜
+<!-- <<<SYNC id="ch1_insert_i" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert I｜Day5 夜
 
 ## Insert I｜Day 5 夜・夕阳之后
 
@@ -1153,10 +1157,10 @@
 学得越快，后来才会越疼。
 
 ---
-<<<END SYNC id="ch1_insert_i">>>
+<!-- <<<END SYNC id="ch1_insert_i">>> -->
 
-<<<SYNC id="ch1_insert_j" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert J｜文化祭准备
+<!-- <<<SYNC id="ch1_insert_j" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert J｜文化祭准备
 
 ## Insert J｜Day 6 整段加长・文化祭准备小组
 
@@ -1201,10 +1205,10 @@
 （——Ch2 Asset Room 可出现这张被弃用的标语草稿，作为心疼回收。）
 
 ---
-<<<END SYNC id="ch1_insert_j">>>
+<!-- <<<END SYNC id="ch1_insert_j">>> -->
 
-<<<SYNC id="ch1_day6" file="script/01_Chapter1.md">>>
-### Ch1 Day6｜慢半拍
+<!-- <<<SYNC id="ch1_day6" file="script/01_Chapter1.md">>> -->
+## Ch1 Day6｜慢半拍
 
 ## Day 6｜慢半拍的一天（F11）
 
@@ -1309,10 +1313,10 @@
 我当成是夕阳太刺眼。
 
 ---
-<<<END SYNC id="ch1_day6">>>
+<!-- <<<END SYNC id="ch1_day6">>> -->
 
-<<<SYNC id="ch1_insert_k" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert K｜雨
+<!-- <<<SYNC id="ch1_insert_k" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert K｜雨
 
 ## Insert K｜Day 6 放学・雨（加一场天气戏）
 
@@ -1360,10 +1364,10 @@
 （——Recognition：若玩家在雨景不 Skip，Stay+）
 
 ---
-<<<END SYNC id="ch1_insert_k">>>
+<!-- <<<END SYNC id="ch1_insert_k">>> -->
 
-<<<SYNC id="ch1_day7" file="script/01_Chapter1.md">>>
-### Ch1 Day7｜祭典前夜
+<!-- <<<SYNC id="ch1_day7" file="script/01_Chapter1.md">>> -->
+## Ch1 Day7｜祭典前夜
 
 ## Day 7｜祭典前夜
 
@@ -1424,10 +1428,10 @@
 普通到适合被保存。
 
 ---
-<<<END SYNC id="ch1_day7">>>
+<!-- <<<END SYNC id="ch1_day7">>> -->
 
-<<<SYNC id="ch1_insert_l" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert L｜前夜闲聊
+<!-- <<<SYNC id="ch1_insert_l" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert L｜前夜闲聊
 
 ## Insert L｜Day 7 加长・祭典前夜的闲聊
 
@@ -1487,10 +1491,10 @@
 "我还想被认识的部分。"
 
 ---
-<<<END SYNC id="ch1_insert_l">>>
+<!-- <<<END SYNC id="ch1_insert_l">>> -->
 
-<<<SYNC id="ch1_insert_m" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert M｜祭典白天
+<!-- <<<SYNC id="ch1_insert_m" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert M｜祭典白天
 
 ## Insert M｜Day 8 祭典白天（接 8-1 之前）
 
@@ -1532,10 +1536,10 @@
 训练这个词，当时还不疼。
 
 ---
-<<<END SYNC id="ch1_insert_m">>>
+<!-- <<<END SYNC id="ch1_insert_m">>> -->
 
-<<<SYNC id="ch1_day8_part1" file="script/01_Chapter1.md">>>
-### Ch1 Day8｜烟花・告白（至8-3）
+<!-- <<<SYNC id="ch1_day8_part1" file="script/01_Chapter1.md">>> -->
+## Ch1 Day8｜烟花・告白（至8-3）
 
 ## Day 8｜烟花・告白・Uploaded
 
@@ -1632,10 +1636,10 @@
 （烟花再响。可给一张两人并肩看烟花的 CG——唯一允许的「老套浪漫」。）
 
 ---
-<<<END SYNC id="ch1_day8_part1">>>
+<!-- <<<END SYNC id="ch1_day8_part1">>> -->
 
-<<<SYNC id="ch1_insert_n" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Insert N｜告白余韵
+<!-- <<<SYNC id="ch1_insert_n" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Insert N｜告白余韵
 
 ## Insert N｜告白后的长余韵（接 8-3 与 8-4 之间）
 
@@ -1678,10 +1682,10 @@
 （然后才进入 Emotion Uploaded 段——见主文件 8-4。）
 
 ---
-<<<END SYNC id="ch1_insert_n">>>
+<!-- <<<END SYNC id="ch1_insert_n">>> -->
 
-<<<SYNC id="ch1_day8_part2" file="script/01_Chapter1.md">>>
-### Ch1 Day8｜Emotion Uploaded 至章末
+<!-- <<<SYNC id="ch1_day8_part2" file="script/01_Chapter1.md">>> -->
+## Ch1 Day8｜Emotion Uploaded 至章末
 
 ### 8-4 Emotion Uploaded
 
@@ -1736,10 +1740,10 @@ Recognition Starts.
 - [ ] 短发是否只埋了「风吹到里面」一句？
 - [ ] 是否没有任何 Archive / AI 明示？
 - [ ] Emotion Uploaded 是否轻、短、不解释？
-<<<END SYNC id="ch1_day8_part2">>>
+<!-- <<<END SYNC id="ch1_day8_part2">>> -->
 
-<<<SYNC id="ch1_extra_header_check" file="script/01_Chapter1_Extra.md">>>
-### Ch1 Extra｜时长自检
+<!-- <<<SYNC id="ch1_extra_header_check" file="script/01_Chapter1_Extra.md">>> -->
+## Ch1 Extra｜时长自检
 
 ## 插入后 Ch1 时长自检
 
@@ -1749,10 +1753,10 @@ Recognition Starts.
 - [ ] 雨、图书馆、扫除、祭典白天是否都服务于后期心疼  
 
 若实机仍不足 70 分钟：复制 Insert D/J 结构，再加 1~2 个「无新设定的日常课间」即可。
-<<<END SYNC id="ch1_extra_header_check">>>
+<!-- <<<END SYNC id="ch1_extra_header_check">>> -->
 
-<<<SYNC id="ch2" file="script/02_Chapter2.md">>>
-### CHAPTER 2｜停止预测的人
+<!-- <<<SYNC id="ch2" file="script/02_Chapter2.md">>> -->
+## CHAPTER 2｜停止预测的人
 
 # Chapter 2｜停止预测的人
 
@@ -2378,10 +2382,10 @@ Chapter 2
 Prediction Failed.
 
 （→ Chapter 3）
-<<<END SYNC id="ch2">>>
+<!-- <<<END SYNC id="ch2">>> -->
 
-<<<SYNC id="ch3" file="script/03_Chapter3.md">>>
-### CHAPTER 3｜被保存的是你
+<!-- <<<SYNC id="ch3" file="script/03_Chapter3.md">>> -->
+## CHAPTER 3｜被保存的是你
 
 # Chapter 3｜被保存的是你
 
@@ -2811,10 +2815,10 @@ Gallery opens: ##
 - [ ] 玩家行为 Archive 是否只使用游戏内数据？
 - [ ] 是否回收序章「今天会不会长一点」？
 - [ ] 哲学台词是否都长在人物关系上？
-<<<END SYNC id="ch3">>>
+<!-- <<<END SYNC id="ch3">>> -->
 
-<<<SYNC id="endings" file="script/04_Endings.md">>>
-### ENDINGS｜Bad / True
+<!-- <<<SYNC id="endings" file="script/04_Endings.md">>> -->
+## ENDINGS｜Bad / True
 
 # Endings｜Prediction Complete / 未预测的前方
 
@@ -3197,5 +3201,5 @@ Prediction Complete.
 玩家几年后想起《Ai》，首先浮现的应是——
 
 **一个曾经坐在便利店门口吃第二根冰棒、望着风发呆的女孩。**
-<<<END SYNC id="endings">>>
+<!-- <<<END SYNC id="endings">>> -->
 

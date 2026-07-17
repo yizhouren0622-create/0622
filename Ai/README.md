@@ -12,8 +12,8 @@
 ```
 Ai/
 ├── README.md                          # 本文件
-├── SYNC.md                            # txt ↔ MD 双向同步协议
-├── Ai_演出顺序全本.txt                 # ★按演出顺序的完整剧本（主编辑稿）
+├── SYNC.md                            # 全本 ↔ 分章 双向同步协议
+├── Ai_演出顺序全本.md                  # ★按演出顺序的完整剧本（主编辑稿）
 ├── design/                            # 创作宪法与机制（不同步进全本）
 ├── notes/
 ├── tools/
@@ -28,8 +28,8 @@ Ai/
     └── 04_Endings.md
 ```
 
-> **改剧本请优先改** `Ai_演出顺序全本.txt`，然后 `python3 Ai/tools/sync_script.py split`。  
-> Agent 改 `script/*.md` 后必须 `python3 Ai/tools/sync_script.py build`。详见 `SYNC.md`。
+> **改剧本请优先改** [`Ai_演出顺序全本.md`](./Ai_演出顺序全本.md)，然后 `python3 Ai/tools/sync_script.py split`。  
+> Agent 改 `script/*.md` 后必须 `python3 Ai/tools/sync_script.py build`。详见 [`SYNC.md`](./SYNC.md)。
 
 ---
 

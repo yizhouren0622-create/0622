@@ -1,6 +1,6 @@
 {
-  "txt_path": "Ai_演出顺序全本.txt",
-  "description": "演出顺序全本 ↔ 分章 MD 双向同步清单",
+  "full_path": "Ai_演出顺序全本.md",
+  "description": "演出顺序全本.md ↔ 分章 MD 双向同步清单",
   "performance_order": [
     { "id": "prologue", "file": "script/00_Prologue.md", "title": "PROLOGUE｜序章" },
     { "id": "ch1_header", "file": "script/01_Chapter1.md", "heading": "# Chapter 1｜认识一个人的错误方式", "through": "---", "title": "CHAPTER 1｜认识一个人的错误方式（章头）" },

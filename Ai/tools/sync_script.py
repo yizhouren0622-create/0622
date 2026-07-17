@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""《Ai》演出顺序全本.txt ↔ 分章 MD 双向同步。
+"""《Ai》演出顺序全本.md ↔ 分章 MD 双向同步。
 
 用法:
-  python3 sync_script.py build   # MD → txt（库改完后生成/刷新全本）
-  python3 sync_script.py split   # txt → MD（你改完 txt 后写回库）
+  python3 sync_script.py build   # 分章 MD → 全本.md
+  python3 sync_script.py split   # 全本.md → 分章 MD
   python3 sync_script.py check   # 检查两侧标记是否齐全
 """
 
@@ -17,14 +17,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]  # Ai/
 MANIFEST_PATH = Path(__file__).resolve().parent / "sync_manifest.json"
 
+# 支持 HTML 注释标记（GitHub 预览更干净）与旧版裸标记
 BEGIN_RE = re.compile(
-    r"^<<<SYNC\s+id=\"(?P<id>[^\"]+)\"\s+file=\"(?P<file>[^\"]+)\"\s*>>>\s*$"
+    r"^(?:<!--\s*)?<<<SYNC\s+id=\"(?P<id>[^\"]+)\"\s+file=\"(?P<file>[^\"]+)\"\s*>>>(?:\s*-->)?\s*$"
 )
-END_RE = re.compile(r"^<<<END\s+SYNC\s+id=\"(?P<id>[^\"]+)\"\s*>>>\s*$")
+END_RE = re.compile(
+    r"^(?:<!--\s*)?<<<END\s+SYNC\s+id=\"(?P<id>[^\"]+)\"\s*>>>(?:\s*-->)?\s*$"
+)
 
 
 def load_manifest() -> dict:
     return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+
+def full_doc_path(manifest: dict) -> Path:
+    rel = manifest.get("full_path") or manifest.get("txt_path")
+    if not rel:
+        raise KeyError("manifest 缺少 full_path")
+    return ROOT / rel
 
 
 def read_text(path: Path) -> str:
@@ -72,14 +82,6 @@ def extract_by_heading(file_text: str, heading: str, until_heading: str | None =
     return "".join(lines[start:end]).rstrip() + "\n"
 
 
-def extract_file_preamble_until(file_text: str, until_heading: str) -> str:
-    """取文件开头直到某个 heading（不含）。"""
-    idx = file_text.find(until_heading)
-    if idx < 0:
-        raise ValueError(f"找不到截止标题: {until_heading!r}")
-    return file_text[:idx].rstrip() + "\n"
-
-
 def extract_from_heading_to_end(file_text: str, heading: str) -> str:
     idx = file_text.find(heading)
     if idx < 0:
@@ -95,7 +97,6 @@ def get_block_content(item: dict) -> str:
     heading = item["heading"]
     until_heading = item.get("until_heading")
     if item.get("through") == "---" and heading.startswith("# "):
-        # 章头：从文件头到第一个 ##
         if not text.lstrip().startswith("#"):
             raise ValueError(f"{item['file']} 缺少一级标题")
         m = re.search(r"^##\s+", text, flags=re.M)
@@ -109,33 +110,42 @@ def get_block_content(item: dict) -> str:
     return extract_by_heading(text, heading)
 
 
-def build_txt(manifest: dict) -> Path:
-    txt_path = ROOT / manifest["txt_path"]
+def sync_begin(item_id: str, file_rel: str) -> str:
+    return f'<!-- <<<SYNC id="{item_id}" file="{file_rel}">>> -->\n'
+
+
+def sync_end(item_id: str) -> str:
+    return f'<!-- <<<END SYNC id="{item_id}">>> -->\n'
+
+
+def build_full(manifest: dict) -> Path:
+    out_path = full_doc_path(manifest)
     parts: list[str] = []
-    parts.append("《Ai》演出顺序全本\n")
-    parts.append("============================================================\n")
-    parts.append("双向同步规则：\n")
-    parts.append("1. 你改本 txt → 运行: python3 Ai/tools/sync_script.py split\n")
-    parts.append("2. Agent/库改 MD → 运行: python3 Ai/tools/sync_script.py build\n")
-    parts.append("3. 不要删除 <<<SYNC ...>>> / <<<END SYNC ...>>> 标记行\n")
-    parts.append("4. 标注规范：【立绘】（演出/UI）\"对白\"\n")
-    parts.append("============================================================\n\n")
+    parts.append("# 《Ai》演出顺序全本\n\n")
+    parts.append("> 按真实演出顺序排列的完整剧本。在 GitHub 上直接预览 / 编辑本文件即可。\n\n")
+    parts.append("## 双向同步\n\n")
+    parts.append("1. 你改本文件 → `python3 Ai/tools/sync_script.py split`（写回 `script/*.md`）\n")
+    parts.append("2. Agent 改分章 MD → `python3 Ai/tools/sync_script.py build`（刷新本文件）\n")
+    parts.append("3. **不要删除** HTML 注释里的 `<<<SYNC>>>` / `<<<END SYNC>>>` 标记\n")
+    parts.append("4. 标注：`【立绘】` `（演出/UI）` `\"对白\"`\n\n")
+    parts.append("---\n\n")
 
     for item in manifest["performance_order"]:
         content = get_block_content(item).rstrip() + "\n"
-        parts.append(f'<<<SYNC id="{item["id"]}" file="{item["file"]}">>>\n')
-        parts.append(f'### {item["title"]}\n\n')
+        parts.append(sync_begin(item["id"], item["file"]))
+        parts.append(f'## {item["title"]}\n\n')
         parts.append(content)
         if not content.endswith("\n"):
             parts.append("\n")
-        parts.append(f'<<<END SYNC id="{item["id"]}">>>\n\n')
+        parts.append(sync_end(item["id"]))
+        parts.append("\n")
 
-    write_text(txt_path, "".join(parts))
-    return txt_path
+    write_text(out_path, "".join(parts))
+    return out_path
 
 
-def parse_txt(txt: str) -> dict[str, dict]:
-    lines = txt.splitlines(keepends=True)
+def parse_full(doc: str) -> dict[str, dict]:
+    lines = doc.splitlines(keepends=True)
     blocks: dict[str, dict] = {}
     i = 0
     while i < len(lines):
@@ -146,8 +156,8 @@ def parse_txt(txt: str) -> dict[str, dict]:
         block_id = m.group("id")
         file_path = m.group("file")
         i += 1
-        # 可选跳过 ### title 行
-        if i < len(lines) and lines[i].startswith("### "):
+        # 跳过本工具注入的导航标题（## title）
+        if i < len(lines) and lines[i].startswith("## "):
             i += 1
             if i < len(lines) and lines[i].strip() == "":
                 i += 1
@@ -169,8 +179,6 @@ def parse_txt(txt: str) -> dict[str, dict]:
 
 
 def rebuild_files(manifest: dict, blocks: dict[str, dict]) -> list[Path]:
-    # 按 performance_order 里声明的 file/heading 重组
-    # 对每个目标文件，按「该文件在 MD 中的自然顺序」拼接
     file_section_order: dict[str, list[str]] = {
         "script/00_Prologue.md": ["prologue"],
         "script/01_Chapter1.md": [
@@ -207,7 +215,6 @@ def rebuild_files(manifest: dict, blocks: dict[str, dict]) -> list[Path]:
         "script/04_Endings.md": ["endings"],
     }
 
-    # Extra 文件需要保留文件头（Insert 之前）
     extra_header = (
         "# Chapter 1 扩写卷｜日常变奏（插入用）\n\n"
         "本文件为第一章的时长补强。  \n"
@@ -223,7 +230,6 @@ def rebuild_files(manifest: dict, blocks: dict[str, dict]) -> list[Path]:
             raise ValueError(f"{file_rel} 缺少区块: {missing}")
         chunks = [blocks[i]["body"].rstrip() + "\n" for i in ids]
         if file_rel == "script/01_Chapter1_Extra.md":
-            # 若第一个 insert 已含文件头则不重复；否则补 header
             first = chunks[0]
             if first.lstrip().startswith("# Chapter 1 扩写卷"):
                 text = "\n".join(chunk.rstrip() for chunk in chunks) + "\n"
@@ -232,7 +238,6 @@ def rebuild_files(manifest: dict, blocks: dict[str, dict]) -> list[Path]:
                 if not text.endswith("\n"):
                     text += "\n"
         elif file_rel == "script/01_Chapter1.md":
-            # day8 part1 + part2 直接相连
             text = "\n".join(chunk.rstrip() + "\n" for chunk in chunks)
         else:
             text = chunks[0] if len(chunks) == 1 else "\n".join(c.rstrip() + "\n" for c in chunks)
@@ -244,14 +249,14 @@ def rebuild_files(manifest: dict, blocks: dict[str, dict]) -> list[Path]:
 
 def cmd_build() -> None:
     manifest = load_manifest()
-    path = build_txt(manifest)
+    path = build_full(manifest)
     print(f"[build] wrote {path}")
 
 
 def cmd_split() -> None:
     manifest = load_manifest()
-    txt_path = ROOT / manifest["txt_path"]
-    blocks = parse_txt(read_text(txt_path))
+    path = full_doc_path(manifest)
+    blocks = parse_full(read_text(path))
     expected = {item["id"] for item in manifest["performance_order"]}
     got = set(blocks)
     if expected != got:
@@ -265,15 +270,15 @@ def cmd_split() -> None:
 
 def cmd_check() -> None:
     manifest = load_manifest()
-    txt_path = ROOT / manifest["txt_path"]
-    if not txt_path.exists():
-        raise SystemExit("[check] txt 不存在，请先 build")
-    blocks = parse_txt(read_text(txt_path))
+    path = full_doc_path(manifest)
+    if not path.exists():
+        raise SystemExit(f"[check] 全本不存在，请先 build: {path}")
+    blocks = parse_full(read_text(path))
     expected = [item["id"] for item in manifest["performance_order"]]
     ok = True
     for i in expected:
         if i not in blocks:
-            print(f"[check] MISSING in txt: {i}")
+            print(f"[check] MISSING in full doc: {i}")
             ok = False
     for item in manifest["performance_order"]:
         try:
