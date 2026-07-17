@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+*.backup
+.DS_Store
