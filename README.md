@@ -1,115 +1,141 @@
-# Slay the Spire 全解锁工具（iOS / PC / Android）
+# Slay the Spire iOS 全解锁（抓取 → 解锁 → 写回）
 
-我**无法直接读取你的 iPhone 本地数据**。请把游戏存档导出到电脑后，用本工具修改，再写回手机。
+**结论先说清楚：**
 
-本工具会解锁：
+1. 我这边的云环境**连不上你的 iPhone**，也不能替你装 iMazing。
+2. 官方 STS 的解锁进度在**本地 `preferences`**，**不是网络回包**。HTTP/HTTPS 抓包改响应，跑不通解锁。
+3. 这里的「抓包」按可落地流程实现为：**USB/备份抓取 App 容器 → 本地解锁 → 写回手机**。
 
-- 全部角色（Silent / Defect / Watcher）
-- 全部卡牌 / 遗物解锁进度
-- Ascension 20
-- Act 4（各角色通关标记）
-- 每日挑战 / 自定义模式入口所需标记
-- 图鉴：已见卡牌 / 遗物 / Boss（模板覆盖）
+本仓库提供一条不依赖 iMazing 的开源流程（`pymobiledevice3`）。
 
-## 快速开始
+## 一键跑通（推荐先看 demo）
 
-```bash
-# 1) 把导出的 preferences 放到 input/（或传入路径）
-python3 unlock_sts.py input -o output/unlocked_preferences
-
-# 2) 检查结果后，把 output/unlocked_preferences 写回 iPhone
-```
-
-原地修改（自动备份为 `preferences.backup`）：
+无需手机，先验证整条链路：
 
 ```bash
-python3 unlock_sts.py /path/to/preferences
+pip install -r requirements.txt
+python3 sts_ios_pipeline.py run --mode demo
 ```
 
-运行测试：
+成功后，假设备里的解锁文件会变成满解锁：
+
+`tests/fixtures/fake_ios_device/Documents/preferences/`
+
+单元测试：
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-## iOS 导出 / 写回步骤
+## 真机流程（Windows / macOS）
 
-官方 App **通常不开放** iTunes/Finder「文件共享」，所以需要从 App 容器里取出 `preferences`。
+### 0. 准备
 
-### 方法 A：iMazing（推荐，无需越狱）
+- 安装 Python 3.10+
+- iPhone 用数据线连接电脑
+- 手机解锁，弹窗点 **信任此电脑**
+- 安装依赖：
 
-1. 用数据线连接 iPhone，打开 [iMazing](https://imazing.com/)
-2. 选择设备 → **管理 App** / **App 数据**
-3. 找到 **Slay the Spire**
-4. **导出 App 数据**（Export App Data / Backup App Data）到电脑
-5. 在导出包中搜索这些文件名之一：
-   - `STSPlayer`
-   - `STSUnlockProgress`
-   - `STSUnlocks`
-6. 它们所在目录就是 `preferences`（常见位置类似）：
-   - `Documents/preferences`
-   - `Library/preferences`
-7. 把整个 `preferences` 文件夹复制到本仓库的 `input/`
-8. 运行解锁命令
-9. 用 iMazing **写回 / 恢复 App 数据**时，用修改后的 `preferences` 覆盖原目录
-10. 在手机上**完全划掉游戏进程**后重新打开
-
-### 方法 B：越狱设备
-
-直接进入 App 沙盒，例如：
-
-```text
-/var/mobile/Containers/Data/Application/<UUID>/
+```bash
+cd 本仓库
+pip install -r requirements.txt
 ```
 
-在其中查找 `preferences` 或 `STSPlayer`，复制到电脑修改后再覆盖回去。
+Windows 若 usbmux 异常，可再装 [iTunes](https://www.apple.com/itunes/)（只为驱动）。
 
-### 方法 C：你已有 PC 版存档
+### 1. 检查环境
 
-若你其实能拿到 PC 的 `preferences`，也可直接对本工具使用：
-
-```text
-Steam/.../SlayTheSpire/preferences
+```bash
+python3 sts_ios_pipeline.py doctor
 ```
 
-格式与移动端一致。
+应能看到 USB 设备，并尽量识别到 Slay the Spire 的 Bundle ID（常见 `com.humble.SlayTheSpire`）。
 
-## 命令参数
+### 2. 一键：抓取 → 全解锁 → 写回
 
-| 参数 | 说明 |
+```bash
+python3 sts_ios_pipeline.py run --mode usb
+```
+
+若自动路径不对，可指定：
+
+```bash
+python3 sts_ios_pipeline.py run --mode usb \
+  --bundle-id com.humble.SlayTheSpire \
+  --remote-prefs preferences
+```
+
+写回后：**在 iPhone 上划掉游戏进程，再重新打开**。
+
+### 3. 分步执行（排查用）
+
+```bash
+python3 sts_ios_pipeline.py capture --mode usb
+python3 sts_ios_pipeline.py unlock
+python3 sts_ios_pipeline.py restore --mode usb
+```
+
+工作目录默认 `work/`：
+
+| 路径 | 含义 |
 | --- | --- |
-| `prefs` | 存档路径（preferences 或整个 iOS 导出包） |
-| `-o DIR` | 输出到新目录，不改原文件 |
-| `--slot N` | `0` 默认槽；`1`/`2` 对应 `1_`/`2_` 前缀；`-1` 全部 |
-| `--keep-seen` | 保留你原来的图鉴进度，只做合并 |
-| `--dry-run` | 只预览，不写入 |
-| `--no-backup` | 原地修改时不备份 |
+| `work/capture/` | 从手机抓到的原始容器/备份提取 |
+| `work/unlocked_preferences/` | 解锁后的 preferences |
+| `work/pipeline_meta.json` | Bundle ID / 远程路径等元数据 |
 
-## 会改哪些文件
+## USB 失败时：未加密备份模式
 
-| 文件 | 作用 |
-| --- | --- |
-| `STSUnlockProgress` | 各角色解锁等级拉满 |
-| `STSUnlocks` | 角色与解锁内容标记 |
-| `STSPlayer` | Act 4 / spirits；保留你的 `alias`/`name` |
-| `STSDataVagabond` 等 | Ascension 20、每日/图鉴入口条件 |
-| `STSSeenCards` / `STSSeenRelics` / `STSSeenBosses` | 图鉴全解锁模板 |
+部分系统上 HouseArrest 会被拒绝，可改备份抓取：
 
-多存档槽文件名可能是 `1_STSPlayer`、`2_STSUnlockProgress` 等，工具会自动处理。
+```bash
+# 自动尝试备份（或先用 Finder/iTunes 做「未加密」备份）
+python3 sts_ios_pipeline.py capture --mode backup --backup-dir work/ios_backup
+python3 sts_ios_pipeline.py unlock
+python3 sts_ios_pipeline.py restore --mode usb
+```
 
-## 把文件交给我（Cloud Agent）时
+说明：`backup` 模式负责**取出**；写回仍走 USB `restore`。若 USB 写回也失败，把 `work/unlocked_preferences/` 用爱思助手等工具手动塞回 App 容器即可。
 
-如果你希望由我直接改你的真实存档：
+## 不想用命令行时
 
-1. 用 iMazing 导出 Slay the Spire App 数据
-2. 至少上传 `preferences` 文件夹（或包含 `STSPlayer` 的导出包）
-3. 放到本仓库 `input/` 后告诉我
+可用免费/常见国产工具代替 iMazing 做「导出/导入 App 数据」：
 
-没有这些文件时，我只能提供工具，无法替你修改手机上的进度。
+- 爱思助手
+- 3uTools
 
-## 注意
+导出后把 `preferences`（内含 `STSPlayer`）放到 `input/`，再：
 
-- 修改前务必备份
-- 写回后若进度被覆盖，确认已完全重启游戏，且恢复的是正确 App 容器
-- 仅用于你自己的单机存档
-- 模板来源于社区公开的 preferences 解锁文件（见 `templates/`）
+```bash
+python3 unlock_sts.py input -o output/unlocked_preferences
+```
+
+然后手动写回。
+
+## 只解锁本地目录
+
+```bash
+python3 unlock_sts.py /path/to/preferences -o output/unlocked_preferences
+```
+
+## 会解锁什么
+
+- 全部角色
+- 卡牌 / 遗物解锁进度
+- Ascension 20
+- Act 4
+- 每日挑战 / 自定义模式入口条件
+- 图鉴（Seen cards / relics / bosses）
+
+## 为什么不是「网络抓包改回包」
+
+官方 STS 进度校验与解锁标记都在本地 JSON preferences，没有「请求服务器返回已解锁列表」这种可改链路。对官方客户端，改抓包回包无法稳定解锁；改本地 preferences 才是正确路径。
+
+## 把真机文件交给 Cloud Agent
+
+如果你希望我继续直接改你的真实存档：
+
+1. 在你自己电脑上执行 `capture`（或爱思导出）
+2. 把 `work/unlocked_preferences` 之前的原始 `preferences` 上传到仓库 `input/`
+3. 告诉我一声
+
+没有这些文件时，我只能把流程工具准备好，无法隔空改手机。
