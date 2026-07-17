@@ -20,7 +20,6 @@ import unlock_sts
 ROOT = Path(__file__).resolve().parent
 DEFAULT_WORK = ROOT / "work"
 DEFAULT_FAKE_DEVICE = ROOT / "tests" / "fixtures" / "fake_ios_device"
-DEFAULT_DEMO_DEVICE = ROOT / "work" / "demo_device"
 
 
 def _work_paths(work: Path) -> dict[str, Path]:
