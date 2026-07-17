@@ -1,0 +1,43 @@
+{
+  "txt_path": "Ai_演出顺序全本.txt",
+  "description": "演出顺序全本 ↔ 分章 MD 双向同步清单",
+  "performance_order": [
+    { "id": "prologue", "file": "script/00_Prologue.md", "title": "PROLOGUE｜序章" },
+    { "id": "ch1_header", "file": "script/01_Chapter1.md", "heading": "# Chapter 1｜认识一个人的错误方式", "through": "---", "title": "CHAPTER 1｜认识一个人的错误方式（章头）" },
+    { "id": "ch1_day1", "file": "script/01_Chapter1.md", "heading": "## Day 1｜撞见", "title": "Ch1 Day1｜撞见" },
+    { "id": "ch1_insert_a", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert A｜Day 1 夜（接 1-5 分别之后）", "title": "Ch1 Insert A｜Day1 夜" },
+    { "id": "ch1_insert_b", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert B｜Day 2 午前・扫除（接 Day 2 便利店之前）", "title": "Ch1 Insert B｜Day2 扫除" },
+    { "id": "ch1_day2", "file": "script/01_Chapter1.md", "heading": "## Day 2｜两根冰棒（F01）", "title": "Ch1 Day2｜两根冰棒" },
+    { "id": "ch1_insert_c", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert C｜Day 2 夜・第二根的余味（接 2-3 吸管纸之后）", "title": "Ch1 Insert C｜Day2 夜" },
+    { "id": "ch1_insert_d", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert D｜Day 3 课间・普通同学戏（接 3-1 数云之前）", "title": "Ch1 Insert D｜Day3 课间" },
+    { "id": "ch1_day3", "file": "script/01_Chapter1.md", "heading": "## Day 3｜云与猫（F02 / F05）", "title": "Ch1 Day3｜云与猫" },
+    { "id": "ch1_insert_e", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert E｜Day 3 傍晚・猫的后续（接 3-2 之后）", "title": "Ch1 Insert E｜猫后续" },
+    { "id": "ch1_insert_f", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert F｜Day 4 午前・图书馆（接 4-1 贩卖机之前）", "title": "Ch1 Insert F｜图书馆" },
+    { "id": "ch1_day4", "file": "script/01_Chapter1.md", "heading": "## Day 4｜饮料与回家路（伪分支日）", "title": "Ch1 Day4｜饮料与回家路" },
+    { "id": "ch1_insert_g", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert G｜Day 4 夜・电话／消息（可选短场景）", "title": "Ch1 Insert G｜消息" },
+    { "id": "ch1_insert_h", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert H｜Day 5 午前・体育仓库（接 5-1 镜子之前）", "title": "Ch1 Insert H｜体育仓库" },
+    { "id": "ch1_day5", "file": "script/01_Chapter1.md", "heading": "## Day 5｜镜子与夕阳（F09 / F10）", "title": "Ch1 Day5｜镜子与夕阳" },
+    { "id": "ch1_insert_i", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert I｜Day 5 夜・夕阳之后", "title": "Ch1 Insert I｜Day5 夜" },
+    { "id": "ch1_insert_j", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert J｜Day 6 整段加长・文化祭准备小组", "title": "Ch1 Insert J｜文化祭准备" },
+    { "id": "ch1_day6", "file": "script/01_Chapter1.md", "heading": "## Day 6｜慢半拍的一天（F11）", "title": "Ch1 Day6｜慢半拍" },
+    { "id": "ch1_insert_k", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert K｜Day 6 放学・雨（加一场天气戏）", "title": "Ch1 Insert K｜雨" },
+    { "id": "ch1_day7", "file": "script/01_Chapter1.md", "heading": "## Day 7｜祭典前夜", "title": "Ch1 Day7｜祭典前夜" },
+    { "id": "ch1_insert_l", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert L｜Day 7 加长・祭典前夜的闲聊", "title": "Ch1 Insert L｜前夜闲聊" },
+    { "id": "ch1_insert_m", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert M｜Day 8 祭典白天（接 8-1 之前）", "title": "Ch1 Insert M｜祭典白天" },
+    { "id": "ch1_day8_part1", "file": "script/01_Chapter1.md", "heading": "## Day 8｜烟花・告白・Uploaded", "until_heading": "### 8-4 Emotion Uploaded", "title": "Ch1 Day8｜烟花・告白（至8-3）" },
+    { "id": "ch1_insert_n", "file": "script/01_Chapter1_Extra.md", "heading": "## Insert N｜告白后的长余韵（接 8-3 与 8-4 之间）", "title": "Ch1 Insert N｜告白余韵" },
+    { "id": "ch1_day8_part2", "file": "script/01_Chapter1.md", "heading": "### 8-4 Emotion Uploaded", "to_eof": true, "title": "Ch1 Day8｜Emotion Uploaded 至章末" },
+    { "id": "ch1_extra_header_check", "file": "script/01_Chapter1_Extra.md", "heading": "## 插入后 Ch1 时长自检", "title": "Ch1 Extra｜时长自检" },
+    { "id": "ch2", "file": "script/02_Chapter2.md", "title": "CHAPTER 2｜停止预测的人" },
+    { "id": "ch3", "file": "script/03_Chapter3.md", "title": "CHAPTER 3｜被保存的是你" },
+    { "id": "endings", "file": "script/04_Endings.md", "title": "ENDINGS｜Bad / True" }
+  ],
+  "file_rebuild_order": [
+    "script/00_Prologue.md",
+    "script/01_Chapter1.md",
+    "script/01_Chapter1_Extra.md",
+    "script/02_Chapter2.md",
+    "script/03_Chapter3.md",
+    "script/04_Endings.md"
+  ]
+}

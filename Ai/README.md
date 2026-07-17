@@ -12,24 +12,24 @@
 ```
 Ai/
 ├── README.md                          # 本文件
-├── design/
-│   ├── 00_Scenario_Bible.md           # 创作宪法（最高优先级）
-│   ├── 01_Recognition_System.md       # 理解度机制设计
-│   ├── 02_Foreshadowing_Table.md      # 废萌→心疼→世界观 回收表
-│   └── 03_Characters.md               # 人物设定（只写能让人物鲜活的）
+├── SYNC.md                            # txt ↔ MD 双向同步协议
+├── Ai_演出顺序全本.txt                 # ★按演出顺序的完整剧本（主编辑稿）
+├── design/                            # 创作宪法与机制（不同步进全本）
 ├── notes/
-│   └── Meta_Implementation_Checklist.md
-└── script/
-    ├── 00_Prologue.md                 # 序章（2~4分钟）
-    ├── 01_Chapter1.md                 # 第一章主轴
-    ├── 01_Chapter1_Extra.md           # 第一章日常扩写（插入用）
-    ├── 02_Chapter2.md                 # 第二章
-    ├── 03_Chapter3.md                 # 第三章
-    └── 04_Endings.md                  # Bad / True
+├── tools/
+│   ├── sync_manifest.json             # 区块映射
+│   └── sync_script.py                 # build / split / check
+└── script/                            # 分章库（与全本双向同步）
+    ├── 00_Prologue.md
+    ├── 01_Chapter1.md
+    ├── 01_Chapter1_Extra.md
+    ├── 02_Chapter2.md
+    ├── 03_Chapter3.md
+    └── 04_Endings.md
 ```
 
-> 阅读顺序：先读 `design/00_Scenario_Bible.md`，再按 script 编号往下。  
-> 第一章请将 `01_Chapter1.md` 与 `01_Chapter1_Extra.md` 合并理解。
+> **改剧本请优先改** `Ai_演出顺序全本.txt`，然后 `python3 Ai/tools/sync_script.py split`。  
+> Agent 改 `script/*.md` 后必须 `python3 Ai/tools/sync_script.py build`。详见 `SYNC.md`。
 
 ---
 
