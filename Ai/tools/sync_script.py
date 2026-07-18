@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""《Ai》演出顺序全本.md ↔ 分章 MD 双向同步。
+"""《Ai》剧本汇总 ↔ 分章 MD 双向同步。
 
 用法:
-  python3 sync_script.py build   # 分章 MD → 全本.md
-  python3 sync_script.py split   # 全本.md → 分章 MD
+  python3 sync_script.py build   # 分章 → 剧本汇总_演出顺序全本.md
+  python3 sync_script.py split   # 汇总 → 分章（文件名=章节）
   python3 sync_script.py check   # 检查两侧标记是否齐全
 """
 
@@ -121,11 +121,11 @@ def sync_end(item_id: str) -> str:
 def build_full(manifest: dict) -> Path:
     out_path = full_doc_path(manifest)
     parts: list[str] = []
-    parts.append("# 《Ai》演出顺序全本\n\n")
-    parts.append("> 按真实演出顺序排列的完整剧本。在 GitHub 上直接预览 / 编辑本文件即可。\n\n")
+    parts.append("# 《Ai》剧本汇总｜演出顺序全本\n\n")
+    parts.append("> 按演出顺序合并的汇总稿。分章审阅请看 `script/`（文件名=章节名）。\n\n")
     parts.append("## 双向同步\n\n")
-    parts.append("1. 你改本文件 → `python3 Ai/tools/sync_script.py split`（写回 `script/*.md`）\n")
-    parts.append("2. Agent 改分章 MD → `python3 Ai/tools/sync_script.py build`（刷新本文件）\n")
+    parts.append("1. 改本汇总 → `python3 Ai/tools/sync_script.py split`（写回各章）\n")
+    parts.append("2. 改分章 → `python3 Ai/tools/sync_script.py build`（刷新本汇总）\n")
     parts.append("3. **不要删除** HTML 注释里的 `<<<SYNC>>>` / `<<<END SYNC>>>` 标记\n")
     parts.append("4. 标注：`【立绘】` `（演出/UI）` `\"对白\"`\n\n")
     parts.append("---\n\n")
