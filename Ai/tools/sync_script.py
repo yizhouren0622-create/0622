@@ -179,68 +179,14 @@ def parse_full(doc: str) -> dict[str, dict]:
 
 
 def rebuild_files(manifest: dict, blocks: dict[str, dict]) -> list[Path]:
-    file_section_order: dict[str, list[str]] = {
-        "script/00_Prologue.md": ["prologue"],
-        "script/01_Chapter1.md": [
-            "ch1_header",
-            "ch1_day1",
-            "ch1_day2",
-            "ch1_day3",
-            "ch1_day4",
-            "ch1_day5",
-            "ch1_day6",
-            "ch1_day7",
-            "ch1_day8_part1",
-            "ch1_day8_part2",
-        ],
-        "script/01_Chapter1_Extra.md": [
-            "ch1_insert_a",
-            "ch1_insert_b",
-            "ch1_insert_c",
-            "ch1_insert_d",
-            "ch1_insert_e",
-            "ch1_insert_f",
-            "ch1_insert_g",
-            "ch1_insert_h",
-            "ch1_insert_i",
-            "ch1_insert_j",
-            "ch1_insert_k",
-            "ch1_insert_l",
-            "ch1_insert_m",
-            "ch1_insert_n",
-            "ch1_extra_header_check",
-        ],
-        "script/02_Chapter2.md": ["ch2"],
-        "script/03_Chapter3.md": ["ch3"],
-        "script/04_Endings.md": ["endings"],
-    }
-
-    extra_header = (
-        "# Chapter 1 扩写卷｜日常变奏（插入用）\n\n"
-        "本文件为第一章的时长补强。  \n"
-        "插入位置见各节标注。与主文件 `01_Chapter1.md` 同一时间线，不新增设定。  \n"
-        "目标：把 Ch1 从「大纲密度」拉到约 70 分钟可玩文本。\n\n"
-        "---\n\n"
-    )
-
+    """每章一个独立文档：全本里每个 SYNC 区块对应一个完整 script 文件。"""
     written: list[Path] = []
-    for file_rel, ids in file_section_order.items():
-        missing = [i for i in ids if i not in blocks]
-        if missing:
-            raise ValueError(f"{file_rel} 缺少区块: {missing}")
-        chunks = [blocks[i]["body"].rstrip() + "\n" for i in ids]
-        if file_rel == "script/01_Chapter1_Extra.md":
-            first = chunks[0]
-            if first.lstrip().startswith("# Chapter 1 扩写卷"):
-                text = "\n".join(chunk.rstrip() for chunk in chunks) + "\n"
-            else:
-                text = extra_header + "\n".join(chunk.rstrip() + "\n" for chunk in chunks)
-                if not text.endswith("\n"):
-                    text += "\n"
-        elif file_rel == "script/01_Chapter1.md":
-            text = "\n".join(chunk.rstrip() + "\n" for chunk in chunks)
-        else:
-            text = chunks[0] if len(chunks) == 1 else "\n".join(c.rstrip() + "\n" for c in chunks)
+    for item in manifest["performance_order"]:
+        block_id = item["id"]
+        file_rel = item["file"]
+        if block_id not in blocks:
+            raise ValueError(f"缺少区块: {block_id}")
+        text = blocks[block_id]["body"].rstrip() + "\n"
         path = ROOT / file_rel
         write_text(path, text)
         written.append(path)

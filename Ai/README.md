@@ -3,7 +3,22 @@
 全年龄 · 认知系 · 泣系 · Meta ADV
 
 本目录为《Ai》的创作宪法与详细剧本包。  
-不是传统 Prompt，而是保证 Agent / 编剧始终保持同一种创作思想的 Scenario Bible。
+气质：陪一个人生活，不是攻略一个人。  
+玩家最终记住的是作品本身与那段日子——不是「老婆」。
+
+---
+
+## 分章审阅（请按文件分开看）
+
+| 文档 | 内容 |
+|------|------|
+| [`script/00_Prologue.md`](./script/00_Prologue.md) | 序章（已定稿气质，勿随意加设定） |
+| [`script/01_Chapter1.md`](./script/01_Chapter1.md) | 第一章《日复一日》 |
+| [`script/02_Chapter2.md`](./script/02_Chapter2.md) | 第二章 |
+| [`script/03_Chapter3.md`](./script/03_Chapter3.md) | 第三章 |
+| [`script/04_Endings.md`](./script/04_Endings.md) | Bad / True |
+
+连续阅读可用：[`Ai_演出顺序全本.md`](./Ai_演出顺序全本.md)（由分章自动生成）。
 
 ---
 
@@ -11,61 +26,39 @@
 
 ```
 Ai/
-├── README.md                          # 本文件
-├── SYNC.md                            # 全本 ↔ 分章 双向同步协议
-├── Ai_演出顺序全本.md                  # ★按演出顺序的完整剧本（主编辑稿）
-├── design/                            # 创作宪法与机制（不同步进全本）
+├── README.md
+├── SYNC.md
+├── Ai_演出顺序全本.md          # 演出顺序合并稿（同步生成）
+├── design/                     # 创作宪法与机制
 ├── notes/
-├── tools/
-│   ├── sync_manifest.json             # 区块映射
-│   └── sync_script.py                 # build / split / check
-└── script/                            # 分章库（与全本双向同步）
-    ├── 00_Prologue.md
-    ├── 01_Chapter1.md
-    ├── 01_Chapter1_Extra.md
-    ├── 02_Chapter2.md
-    ├── 03_Chapter3.md
-    └── 04_Endings.md
+├── tools/                      # sync_script.py
+└── script/                     # ★分章审阅正文（每章独立）
 ```
-
-> **改剧本请优先改** [`Ai_演出顺序全本.md`](./Ai_演出顺序全本.md)，然后 `python3 Ai/tools/sync_script.py split`。  
-> Agent 改 `script/*.md` 后必须 `python3 Ai/tools/sync_script.py build`。详见 [`SYNC.md`](./SYNC.md)。
 
 ---
 
-## 剧本标注规范
+## 第一章创作纪律（摘要）
+
+- 降低约 70% 哲学对白；说话像生活中的人
+- 多写普通细节：喷嚏、喘气、卖完、夹娃娃失败、借橡皮
+- 不消费女主：少福利堆叠，多「什么都没发生」的陪伴
+- 怪问题可以有（自动门），但不要立刻解释成伏笔
+
+详见 [`design/00_Scenario_Bible.md`](./design/00_Scenario_Bible.md) 与 [`SYNC.md`](./SYNC.md)。
+
+---
+
+## 剧本标注
 
 | 符号 | 含义 |
 |------|------|
-| `【】` | 立绘变化 / 表情 / 姿势 |
-| `（）` | UI / 演出 / 系统行为 / 镜头指示 |
-| `""` | 对话框内显示的文字 |
-| `＊旁白＊` | 旁白 / 内心独白（无名字框） |
-| `＞选项` | 玩家选择 |
+| `【】` | 立绘 |
+| `（）` | 演出 / UI |
+| `""` | 对话框文字 |
 
----
+## 同步
 
-## 创作优先级（不可颠倒）
-
-**人物 ＞ 情绪 ＞ 日常 ＞ 剧情 ＞ 世界观 ＞ Meta ＞ 反转**
-
-最高规则：
-
-> 所有世界观设定，都必须以「一个女孩正在发生什么变化」来表现，  
-> 而不是以「世界发生了什么」来表现。
-
-最终目标体验：
-
-> 玩家通关后第一反应不是「原来世界观是这样」，  
-> 而是「原来她一直都是这样」。
-
----
-
-## 流程
-
+```bash
+python3 Ai/tools/sync_script.py split   # 全本 → 分章
+python3 Ai/tools/sync_script.py build   # 分章 → 全本
 ```
-Prologue → Chapter1 → Chapter2 → Chapter3 → True / Bad
-```
-
-无攻略角色。无真正路线。所有伪分支最终收束。  
-结局由玩家是否真正「认识」她决定，不是数值攻略。
