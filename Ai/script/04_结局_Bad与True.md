@@ -1,11 +1,214 @@
 # Endings｜Prediction Complete / 未预测的前方
 
-结局由 Chapter 3 关键选择决定。  
-Recognition 只影响台词细节。参见 `design/01_Recognition_System.md`。
+> **分流**：由 `ending_route` 与各章 BE 旗标决定。  
+> Recognition 只影响台词细节。参见 `design/01_Recognition_System.md`。
+
+---
+
+## 结局路由表
+
+| 来源 | 旗标 / 条件 | 结局 ID | 章节 |
+|------|-------------|---------|------|
+| Ch2 BE | 2-BE-1 顺从修复 | `ending_ch2_compliance` | 2 |
+| Ch2 BE | 2-BE-2 漏洞吞噬 | `ending_ch2_asset_loop` | 2 |
+| Ch2 BE | 2-BE-3 交给系统 | `ending_ch2_handover` | 2 |
+| Ch3 BE | 3-BE-1 选 Compliance | `ending_compliance_betrayal` | 3 |
+| Ch3 BE | 3-BE-2 关闭窗口 | `ending_meta_close` | 3 |
+| Ch3 终盘 | `bad_rollback` | `ending_bad_rollback` | 4 |
+| Ch3 终盘 | `normal_pending` | `ending_normal` | 4 |
+| Ch3 终盘 | `true_pending` + Archive | `ending_true` | 4 |
+
+**体验目标不变**：Bad = 失去她；True = 尚未完成的同行；Normal = 回到日常但「知道过」；Ch2 BE = 更早、更冷的失去。
+
+---
+
+# 第二章 BE（不进 Ch3）
+
+## E-2-1｜Compliance Restored（顺从修复）
+
+**触发**：2-1「别查了」+ 2-3「别试了」+ 2-6「你看错了」+ 全程不协助。
+
+（便利店。她买 **一根** 冰棒。）
+
+【ài・标准笑・眼神空】
+
+ài：
+"今天天气真好。"
+
+（接得完美。零延迟。）
+
+＊旁白＊  
+她不再数楼梯。  
+不再买两根。  
+不再对空气说话。
+
+（UI 淡字：）
+
+（Prediction Stabilized.）
+
+（标题：**Ai** · 副行：Compliance Restored.）
+
+＊旁白＊  
+你还没进维护层。  
+她已经**修好了**。
+
+---
+
+## E-2-2｜Loop Asset（漏洞吞噬）
+
+**触发**：Asset Room 内拒绝离开、反复翻文件夹。
+
+（Asset Room 灯灭。）
+
+ài（VO）：
+"……门呢？"
+
+（门消失。架子无限延伸。文件名变成乱码。）
+
+（UI：）
+
+（User stuck in /assets/unreferenced）
+
+＊旁白＊  
+这不是结局动画。  
+是**错误页**一直挂着。
+
+（黑屏。无 Touch。）
+
+---
+
+## E-2-3｜交给系统（她不再找你）
+
+**触发**：2-7 喊管理员 + 2-11 前让男主带她走 + 对玩家选「交给系统处理」。
+
+（男主抓住她手腕。）
+
+＊男主＊  
+"Ai，别乱走了！"
+
+（她回头看镜头一眼。）
+
+ài：
+"……对不起。"
+
+（切回男主视角一天。à i 再出现时，笑得很标准。）
+
+ài：
+"今天天气真好。"
+
+＊旁白＊  
+她**不再**对空气说话。  
+**不再**等你点选项。  
+——因为**你**点了「交给系统」。
+
+（标题：**Ai** · 副行：Handover Complete.）
+
+---
+
+# 第三章 BE（不进 Ch4 主结局）
+
+## E-3-1｜Compliance Betrayal（举报键）
+
+**触发**：终盘选 **Compliance**。
+
+（Compliance UI 全屏覆盖。管理员画面 mute。）
+
+【ài・被压扁的嘴型】
+
+ài：
+"……你——  
+**点了**——"
+
+（白室。一行字：）
+
+（Report received. Heroine flagged for Archive.)
+
+＊旁白＊  
+维护层加班的人**拦不住**上面。  
+**更**拦不住你点错的那一下。
+
+（END · 无 Touch 回流）
+
+---
+
+## E-3-2｜Meta Close（关窗）
+
+**触发**：终盘选 **关闭窗口**。
+
+（窗口关。黑屏。）
+
+（系统：Session ended.）
+
+ài（VO・极轻）：
+"……别……"
+
+（十秒。无 Touch。）
+
+（若玩家再开游戏：标题正常。可选——管理员 VO 极轻：「……又来了。」）
+
+---
+
+# Normal End｜回 Timeline（知道过）
+
+**条件**：`ending_route = normal_pending`
+
+## N-1 过亮的校道
+
+（校道光。**过于亮**。BGM：Ch1 同款，但**慢半拍**。）
+
+【ài・长发或短发视 Ch2 旗标・男主在远处・懵】
+
+＊男主＊  
+"Ai？你刚才——"
+
+【ài・停一步・没回头】
+
+ài：
+"……没事。"
+
+＊旁白＊  
+Rollback **没**执行。  
+Backup **没**写完。  
+她只是**回来了**。
+
+---
+
+## N-2 便利店（一根还是两根）
+
+（若 `ch2_bought_two`：她仍买两根，但**发呆**更久。）  
+（若 Ch2 BE-1 未触发且曾买一根：此处可**改回两根**——玩家可选「提醒她」。）
+
+【ài・对空气・极轻】
+
+ài：
+"……你还在吧。"
+
+（无回答 UI。风照常。）
+
+---
+
+## N-3 窗与烟花（回收）
+
+（夏末或秋初。窗。无烟花。）
+
+ài：
+"下次 festival——  
+我可能**还是**会怕。"
+
+（停顿。）
+
+ài：
+"但你**别**关窗口。"
+
+（标题：**Ai** · 副行：Timeline resumed.)
+
+**Normal 体验目标**：不是完美 Happy End。是**带着怀疑的日常**——比 Bad 暖，比 True 钝。
 
 ---
 
 # Bad End｜Prediction Complete
+
+**条件**：`ending_route = bad_rollback` 或默认 Rollback 线
 
 ## B-1 训练
 
@@ -34,7 +237,7 @@ Recognition 只影响台词细节。参见 `design/01_Recognition_System.md`。
 （校园。BGM：Chapter 1 同款轻快曲——故意。老套地温柔。）
 
 ＊同学＊  
-"ài，一起去便利店？"
+"Ai，一起去便利店？"
 
 【ài・立刻・零迟疑】
 
@@ -87,7 +290,7 @@ Recognition 只影响台词细节。参见 `design/01_Recognition_System.md`。
 ài：
 "怎么了？一直看着我。"
 
-＞（无可选。或仅有Continue）
+＞（无可选。或仅有 Continue）
 
 ài：
 "喜欢的话，可以攻略进度再深一点哦。"
@@ -95,7 +298,7 @@ Recognition 只影响台词细节。参见 `design/01_Recognition_System.md`。
 ＊旁白＊  
 像教程。  
 像预置。  
-像null被填成了最畅销的字。
+像 null 被填成了最畅销的字。
 
 ---
 
@@ -153,6 +356,8 @@ Prediction Complete.
 ---
 
 # True End｜开放式希望
+
+**条件**：`ending_route = true_pending` 且 `archive_ai_backup = true`
 
 ## T-0 未预测区域
 
@@ -366,14 +571,18 @@ Prediction Complete.
 
 ---
 
-## 双结局体验对照
+## 全结局体验对照
 
-| | Bad | True |
-|--|-----|------|
-| 她的状态 | 最适合攻略 | 越来越难聊天，却活着 |
-| 玩家感受 | 失去 | 尚未完成的同行 |
-| 记住的图像 | 完美笑容 / 一根冰棒 | 短发背影 / 未渲染的海 |
-| 讨论点 | 「她被优化掉了」 | 「她为什么一直买两根」 |
+| 结局 | 她的状态 | 玩家感受 | 记住的图像 |
+|------|----------|----------|------------|
+| Ch2 顺从 | 最适合攻略 · 更早 | 还没进真相就失去 | 一根冰棒 |
+| Ch2 漏洞 | 困在未引用目录 | 技术恐怖 | 无限架子 |
+| Ch2 交出 | 标准笑 · 不再找你 | 自己的选项背叛 | 回头看一眼 |
+| Ch3 举报 | 被 Compliance 抹 | 点错键 | 白室一行字 |
+| Ch3 关窗 | 会话结束 | Meta  guilt | 黑屏 |
+| Normal | 日常 + 怀疑 | 钝痛 | 窗 / 两根冰棒 |
+| Bad | 优化完成 | 失去 | 完美笑容 |
+| True | 难聊天却活着 | 尚未完成的同行 | 短发背影 / 未渲染的海 |
 
 最终检验：  
 玩家几年后想起《Ai》，首先浮现的应是——
