@@ -1,8 +1,0 @@
-{
-  "display_name": "Ai",
-  "renamed_all": true,
-  "force_recompile": true,
-  "build_update": false,
-  "packages": ["pc"],
-  "add_from": true
-}
