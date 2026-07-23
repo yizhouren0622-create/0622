@@ -16,7 +16,7 @@
 | Ch3 BE | 3-BE-2 关闭窗口 | `ending_meta_close` | 3 |
 | Ch3 终盘 | `bad_rollback` | `ending_bad_rollback` | 4 |
 | Ch3 终盘 | `normal_pending` | `ending_normal` | 4 |
-| Ch3 终盘 | `true_pending` + Archive | `ending_true` | 4 |
+| Ch3 终盘 | `true_pending` + Archive／拷贝 | `ending_true` | 4 |
 
 **体验目标不变**：Bad = 失去她；True = 尚未完成的同行；Normal = 回到日常但「知道过」；Ch2 BE = 更早、更冷的失去。
 
