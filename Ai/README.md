@@ -28,6 +28,9 @@ Ai/
 ├── README.md
 ├── SYNC.md
 ├── 剧本汇总_演出顺序全本.md   # 汇总（演出顺序）
+├── art/                       # 图标 / 标题 UI 备选
+│   ├── icons/
+│   └── ui/
 ├── design/
 ├── notes/
 ├── tools/
@@ -38,6 +41,8 @@ Ai/
     ├── 03_第三章_被保存的是你.md
     └── 04_结局_Bad与True.md
 ```
+
+美术备选说明见 [`art/README.md`](./art/README.md)。
 
 ---
 
