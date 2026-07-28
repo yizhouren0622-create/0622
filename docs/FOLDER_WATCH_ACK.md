@@ -8,3 +8,8 @@
   - `AGENT_PUSH_PROBE.md` — agent push probe 2026-07-29 00:32:33
 - Action: trivial ack edit so Gmail can notify the owner
 - Notify target: yizhouren0622@gmail.com
+
+## Self-modify notify
+
+Owner self-pushes to `docs/` are covered by `.github/workflows/docs-change-notify.yml`
+(see `docs/SELF_NOTIFY.md`). Agent ack is no longer required for self-changes.

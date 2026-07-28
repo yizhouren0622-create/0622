@@ -1,0 +1,149 @@
+# Notify the owner whenever docs/ changes — including their own pushes.
+# Layer 1: GitHub issue comment → GitHub emails your Gmail (no secrets needed)
+# Layer 2: Direct Gmail SMTP if repo secrets GMAIL_USER + GMAIL_APP_PASSWORD are set
+
+name: docs-change-notify
+
+on:
+  push:
+    paths:
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Collect change summary
+        id: summary
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          FULL_SHA: ${{ github.sha }}
+          AUTHOR_NAME: ${{ github.event.head_commit.author.name }}
+          AUTHOR_EMAIL: ${{ github.event.head_commit.author.email }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          SHORT="${FULL_SHA:0:7}"
+          MSG="$(printf '%s' "${COMMIT_MSG:-manual dispatch}" | head -n 1)"
+          AUTHOR_NAME="${AUTHOR_NAME:-unknown}"
+          AUTHOR_EMAIL="${AUTHOR_EMAIL:-unknown}"
+          if [ "$EVENT_NAME" = "push" ] && git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            FILES="$(git diff --name-only HEAD~1 HEAD -- docs/ | paste -sd ',' - || true)"
+          else
+            FILES="$(git ls-files docs/ | paste -sd ',' - || true)"
+          fi
+          FILES="${FILES:-docs/}"
+
+          {
+            echo "short=$SHORT"
+            echo "subject=docs/ changed: $SHORT — $MSG"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "docs/ folder change detected"
+            echo ""
+            echo "Commit: $SHORT"
+            echo "Author: $AUTHOR_NAME <$AUTHOR_EMAIL>"
+            echo "Message: $MSG"
+            echo "Files: $FILES"
+            echo "Repo: $REPOSITORY"
+            echo "Compare: $SERVER_URL/$REPOSITORY/commit/$FULL_SHA"
+          } > /tmp/notify-body.txt
+
+          {
+            echo "body<<EOF"
+            cat /tmp/notify-body.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Ensure notify issue + comment
+        uses: actions/github-script@v7
+        env:
+          NOTIFY_SUBJECT: ${{ steps.summary.outputs.subject }}
+          NOTIFY_BODY: ${{ steps.summary.outputs.body }}
+        with:
+          script: |
+            const title = '[notify] docs/ folder changes';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const subject = process.env.NOTIFY_SUBJECT || 'docs/ changed';
+            const body = process.env.NOTIFY_BODY || '';
+
+            // Ensure label exists (ignore if it already does).
+            try {
+              await github.rest.issues.createLabel({
+                owner, repo,
+                name: 'docs-notify',
+                color: '0E8A16',
+                description: 'Folder-change notification thread'
+              });
+            } catch (e) {
+              if (e.status !== 422) throw e;
+            }
+
+            const issues = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: 'docs-notify', per_page: 20
+            });
+            let issue = issues.data.find(i => i.title === title);
+            if (!issue) {
+              const created = await github.rest.issues.create({
+                owner, repo,
+                title,
+                labels: ['docs-notify'],
+                assignees: [owner],
+                body: [
+                  'Sticky issue used to email you when `docs/` changes (including your own pushes).',
+                  '',
+                  'GitHub will send notification emails to the address on your account (Gmail).',
+                  'Optional: set secrets `GMAIL_USER` + `GMAIL_APP_PASSWORD` for direct SMTP mail.'
+                ].join('\n')
+              });
+              issue = created.data;
+            }
+
+            await github.rest.issues.createComment({
+              owner, repo,
+              issue_number: issue.number,
+              body: ['## ' + subject, '', '```', body, '```'].join('\n')
+            });
+
+            core.info(`Commented on ${issue.html_url}`);
+
+      - name: Detect Gmail secrets
+        id: mail
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          if [ -n "$GMAIL_USER" ] && [ -n "$GMAIL_APP_PASSWORD" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Gmail SMTP secrets not set; relying on GitHub issue email notifications."
+          fi
+
+      - name: Send Gmail via SMTP (optional)
+        if: steps.mail.outputs.enabled == 'true'
+        uses: dawidd6/action-send-mail@v4
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: ${{ steps.summary.outputs.subject }}
+          to: ${{ secrets.GMAIL_USER }}
+          from: docs-notify <${{ secrets.GMAIL_USER }}>
+          body: file:///tmp/notify-body.txt
