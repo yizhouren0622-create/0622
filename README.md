@@ -1,4 +1,90 @@
-# Slay the Spire iOS 全解锁（抓取 → 解锁 → 写回）
+# Slay the Spire 工具集
+
+本仓库包含两类工具：
+
+1. **iOS / 全解锁**：`sts_ios_pipeline.py` / `unlock_sts.py`
+2. **PC 观者点穴+ 开局**：`start_watcher_pressure_run.py`（本文后半段）
+
+---
+
+## PC：观者默认攻击全改成「点穴+」
+
+把 Steam 版观者存档里的 4 张默认 **Strike** 替换成 **点穴+**（内部 ID：`PathToVictory`），然后你在游戏里点 **Continue** 开这一盘。
+
+### 重要限制
+
+- 云 Agent **不能**直接操作你电脑上的 `C:\Users\...\Downloads\0622-cursor-sts-unlock-all-83e0`
+- 也**不能**远程读取你本机已插线的 iPhone / 已打开的 Steam 游戏
+- 需要你在 **Windows 本机**双击脚本运行
+
+### 最快用法（Windows，推荐虚拟环境）
+
+1. 打开 Steam 版 **Slay the Spire**
+2. 选 **观者 Watcher** → **开始新游戏**
+3. 到 **Neow** 界面（或任意能 **Continue** 的位置）
+4. **完全退出游戏**（不要后台挂着）
+5. 进入仓库目录，双击：
+
+```bat
+run_watcher_pressure.bat
+```
+
+脚本会自动：
+
+- 创建 `.venv` 虚拟环境
+- 查找 `SlayTheSpire\saves\WATCHER.autosave`
+- 备份原存档
+- 把 4 张 Strike 改成点穴+
+- 提示你重新打开游戏 Continue
+
+### 手动命令（PowerShell / CMD）
+
+```bat
+cd C:\Users\30974\Downloads\0622-cursor-sts-unlock-all-83e0
+py -3 -m venv .venv
+.venv\Scripts\python.exe -m pip install -U pip
+.venv\Scripts\python.exe start_watcher_pressure_run.py
+```
+
+Steam 不在默认路径时：
+
+```bat
+.venv\Scripts\python.exe start_watcher_pressure_run.py --game-root "D:\SteamLibrary\steamapps\common\SlayTheSpire"
+```
+
+或直接指定存档：
+
+```bat
+.venv\Scripts\python.exe start_watcher_pressure_run.py --save "C:\...\SlayTheSpire\saves\WATCHER.autosave"
+```
+
+预览不改文件：
+
+```bat
+.venv\Scripts\python.exe start_watcher_pressure_run.py --dry-run
+```
+
+### 观者起始卡组说明
+
+| 卡牌 | 是否会被替换 |
+| --- | --- |
+| 4× Strike（Strike_P） | 是 → 点穴+ |
+| 4× Defend | 否 |
+| 1× Eruption | 否（除非加 `--replace-eruption`） |
+| 1× Vigilance | 否 |
+
+### 常见报错
+
+| 报错 | 处理 |
+| --- | --- |
+| 找不到 WATCHER.autosave | 先在游戏里开一盘观者并退出 |
+| 找不到 Steam 安装目录 | 加 `--game-root` |
+| `python` 不是内部命令 | 安装 Python 3.10+ 并勾选 Add to PATH，或用 `py -3` |
+| venv 创建失败 | 以管理员安装 Python，或运行 `py -3 -m pip install virtualenv` |
+
+---
+
+## iOS 全解锁（抓取 → 解锁 → 写回）
 
 **结论先说清楚：**
 
