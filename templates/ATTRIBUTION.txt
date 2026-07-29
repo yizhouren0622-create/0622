@@ -1,0 +1,4 @@
+Unlock template preference files are adapted from the public repository:
+https://github.com/oelna/Slay-the-Spire-Preferences
+
+Used only as single-player local save unlock templates.

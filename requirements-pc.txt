@@ -1,0 +1,3 @@
+# PC save patching has no extra deps; stdlib only.
+# Optional: spireslayer for interactive experiments
+# spireslayer>=2.0.0

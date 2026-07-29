@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+work/
+*.backup
+.DS_Store
