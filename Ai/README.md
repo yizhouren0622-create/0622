@@ -15,7 +15,8 @@
 | [`script/01_第一章_日复一日.md`](./script/01_第一章_日复一日.md) | 第一章 |
 | [`script/02_第二章_停止预测的人.md`](./script/02_第二章_停止预测的人.md) | 第二章 |
 | [`script/03_第三章_被保存的是你.md`](./script/03_第三章_被保存的是你.md) | 第三章 |
-| [`script/04_结局_Bad与True.md`](./script/04_结局_Bad与True.md) | 结局 |
+| [`script/04_第四章_Ai_Original.md`](./script/04_第四章_Ai_Original.md) | 第四章・世界构筑／三结局 |
+| [`design/04_Chapter4_World_Construction.md`](./design/04_Chapter4_World_Construction.md) | 轻肉鸽系统设计 |
 
 > `Ai/剧本汇总_演出顺序全本.md` 仅由 `Ai/script/` 生成；分章正文以 `script/` 为准。
 

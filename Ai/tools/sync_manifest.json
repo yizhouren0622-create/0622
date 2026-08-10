@@ -6,13 +6,13 @@
     { "id": "ch1", "file": "script/01_第一章_日复一日.md", "title": "01｜第一章・日复一日" },
     { "id": "ch2", "file": "script/02_第二章_停止预测的人.md", "title": "02｜第二章・停止预测的人" },
     { "id": "ch3", "file": "script/03_第三章_被保存的是你.md", "title": "03｜第三章・被保存的是你" },
-    { "id": "endings", "file": "script/04_结局_Bad与True.md", "title": "04｜结局・Bad / True" }
+    { "id": "ch4", "file": "script/04_第四章_Ai_Original.md", "title": "04｜第四章・Ai : Original" }
   ],
   "file_rebuild_order": [
     "script/00_序章.md",
     "script/01_第一章_日复一日.md",
     "script/02_第二章_停止预测的人.md",
     "script/03_第三章_被保存的是你.md",
-    "script/04_结局_Bad与True.md"
+    "script/04_第四章_Ai_Original.md"
   ]
 }
