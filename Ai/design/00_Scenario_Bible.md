@@ -234,9 +234,15 @@ Ending：烟花、告白（「一起过日子」）、Emotion Uploaded → 第�
 **核心不是**虐待→黑化，**而是**爱→预测→塑造→塑造杀死了她。  
 BAD 气质参考 mili《world.execute(me);》：执行成功；无血腥；她极温柔极听话。
 
-### 旧 True／Bad 说明
+### 后日谈（仅 HE）
 
-原线性 True（未预测区域散步）与 Bad（Prediction Complete 完美攻略）**收编进第四章三结局**；不再作为第三章直接出口。
+分文件夹：`design/postgame/` · `script/postgame/`
+
+- **Beyond**：单世界像素探索（DLC 扩世界）；精神稳定度强制回程  
+- **Maintenance**：仅 Python；固定题＋随机 Bug；修出像素版她的世界  
+- **祂助手线**：隐藏非必选；HE + 未对 Ai 表达恋爱兴趣 + 维护投入  
+
+本篇主旨不变；后日谈是「相遇之后」的可玩延伸。
 ---
 
 ## 好感度：Recognition（理解度）

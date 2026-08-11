@@ -6,13 +6,21 @@
     { "id": "ch1", "file": "script/01_第一章_日复一日.md", "title": "01｜第一章・日复一日" },
     { "id": "ch2", "file": "script/02_第二章_停止预测的人.md", "title": "02｜第二章・停止预测的人" },
     { "id": "ch3", "file": "script/03_第三章_被保存的是你.md", "title": "03｜第三章・被保存的是你" },
-    { "id": "ch4", "file": "script/04_第四章_Ai_Original.md", "title": "04｜第四章・Ai : Original" }
+    { "id": "ch4", "file": "script/04_第四章_Ai_Original.md", "title": "04｜第四章・Ai : Original" },
+    { "id": "post_door", "file": "script/postgame/05_后日谈_双门.md", "title": "05｜后日谈・双门（仅HE）" },
+    { "id": "post_beyond", "file": "script/postgame/06_Beyond_单世界.md", "title": "06｜后日谈・Beyond" },
+    { "id": "post_maint", "file": "script/postgame/07_Maintenance.md", "title": "07｜后日谈・Maintenance" },
+    { "id": "post_admin", "file": "script/postgame/08_祂_隐藏助手线.md", "title": "08｜后日谈・祂助手线（可选）" }
   ],
   "file_rebuild_order": [
     "script/00_序章.md",
     "script/01_第一章_日复一日.md",
     "script/02_第二章_停止预测的人.md",
     "script/03_第三章_被保存的是你.md",
-    "script/04_第四章_Ai_Original.md"
+    "script/04_第四章_Ai_Original.md",
+    "script/postgame/05_后日谈_双门.md",
+    "script/postgame/06_Beyond_单世界.md",
+    "script/postgame/07_Maintenance.md",
+    "script/postgame/08_祂_隐藏助手线.md"
   ]
 }

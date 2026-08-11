@@ -7,18 +7,22 @@
 
 ---
 
-## 分章审阅（文件名 = 章节）
+## 分章审阅
 
 | 文档 | 内容 |
 |------|------|
-| [`script/00_序章.md`](./script/00_序章.md) | 序章（对齐定稿） |
+| [`script/00_序章.md`](./script/00_序章.md) | 序章 |
 | [`script/01_第一章_日复一日.md`](./script/01_第一章_日复一日.md) | 第一章 |
 | [`script/02_第二章_停止预测的人.md`](./script/02_第二章_停止预测的人.md) | 第二章 |
 | [`script/03_第三章_被保存的是你.md`](./script/03_第三章_被保存的是你.md) | 第三章 |
 | [`script/04_第四章_Ai_Original.md`](./script/04_第四章_Ai_Original.md) | 第四章・世界构筑／三结局 |
-| [`design/04_Chapter4_World_Construction.md`](./design/04_Chapter4_World_Construction.md) | 轻肉鸽系统设计 |
+| [`script/postgame/`](./script/postgame/) | HE 后日谈剧本 |
+| [`design/ch3/`](./design/ch3/) | 第三章策划备忘 |
+| [`design/ch4/`](./design/ch4/) | 第四章世界构筑策划 |
+| [`design/postgame/`](./design/postgame/) | 后日谈策划（Beyond／维护／祂线） |
 
-> `Ai/剧本汇总_演出顺序全本.md` 仅由 `Ai/script/` 生成；分章正文以 `script/` 为准。
+> 分章存放即可审阅；无单独「全策划汇总版」。  
+> `剧本汇总_演出顺序全本.md` 由 `script/`（含 postgame）sync 生成。
 
 ---
 
@@ -26,24 +30,16 @@
 
 ```
 Ai/
-├── README.md
-├── SYNC.md
-├── 剧本汇总_演出顺序全本.md   # 汇总（演出顺序）
-├── art/                       # 图标 / 标题 UI 备选
-│   ├── icons/
-│   └── ui/
 ├── design/
-├── notes/
-├── tools/
-└── script/                    # ★分章正文
-    ├── 00_序章.md
-    ├── 01_第一章_日复一日.md
-    ├── 02_第二章_停止预测的人.md
-    ├── 03_第三章_被保存的是你.md
-    └── 04_结局_Bad与True.md
+│   ├── ch3/
+│   ├── ch4/
+│   ├── postgame/          # 解锁双门 · Beyond · Maintenance · 祂线
+│   └── 00_Scenario_Bible.md …
+├── script/
+│   ├── 00～04 …
+│   └── postgame/          # 05～08
+└── …
 ```
-
-美术备选说明见 [`art/README.md`](./art/README.md)。
 
 ---
 
@@ -60,4 +56,4 @@ python3 Ai/tools/sync_script.py split   # 汇总 → 分章
 python3 Ai/tools/sync_script.py build   # 分章 → 汇总
 ```
 
-详见 [`SYNC.md`](./SYNC.md) 与 [`design/00_Scenario_Bible.md`](./design/00_Scenario_Bible.md)。
+详见 [`SYNC.md`](./SYNC.md)。
