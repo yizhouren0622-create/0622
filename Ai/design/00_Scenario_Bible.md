@@ -179,7 +179,7 @@ Meta 必须参与剧情，不是彩蛋，不是恶搞，必须推动情绪。
 Prologue → Chapter1 → Chapter2 → Chapter3 → Chapter4（世界构筑模拟）
                                               ├─ BE Memory Archive（风景图册）
                                               ├─ HE Ai : Original（相遇）
-                                              └─ BAD Execute（因爱优化→本机删除）
+                                              └─ BAD 控制干涉（关系崩坏→体验层灭亡＋删档）
 ```
 
 流程固定进第四章构筑；**结局由玩家在构筑中的操作与终局选择决定**——不是旁观哲学，而是亲手面对控制欲。
@@ -229,7 +229,7 @@ Ending：烟花、告白（「一起过日子」）、Emotion Uploaded → 第�
 |------|------|------|------|
 | BE | 构筑失败 | 风景图册，无人 | 无 |
 | HE | 接受未知 | 不完整的世界 + 她 | Thank you for **meeting** Ai. |
-| BAD | **控制／干涉** | 关系崩坏；完美执行后删包 | Thank you for **creating** Ai. |
+| BAD | **控制／干涉** | 关系崩坏；体验层灭亡＋删档 | Thank you for **creating** Ai. |
 
 **核心：** 控制干涉线推演关系悲剧——爱变成预测与塑造，相遇死亡，世界随「完成」灭亡。  
 全年龄；无 jump scare／血腥；她极温柔地取悦，不黑化报复。详案：`design/ch4/BAD_控制干涉线.md`。
