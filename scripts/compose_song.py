@@ -6,9 +6,9 @@ intro, two verses, a wind section, a chorus, a walking bridge,
 a quiet final refrain, and a music-box outro.
 
 The vocal is Xiaoyi singing, not reading. Each line stays one phrase.
-Praat glides the pitch onto the melody, holds the vowel, and adds a
-little vibrato, the way a pop vocal sits on a tune. Consonants keep
-more of her original pitch so the words do not fall apart.
+Her vowel moves onto the melody note with a short glide, keeps the
+shape of the Mandarin tone, and adds a light vibrato on the long notes.
+The words are not sliced apart, and the band underneath is unchanged.
 
 Requires ffmpeg, fluidsynth, FluidR3_GM, edge-tts, and praat-parselmouth.
 Output: audio/灯下-歌曲.mp3
@@ -24,6 +24,7 @@ from pathlib import Path
 
 import numpy as np
 import parselmouth
+import pyworld as pw
 import soundfile as sf
 from edge_tts import Communicate
 from parselmouth.praat import call
@@ -236,7 +237,7 @@ VOCALS: list[tuple[float, float, str, list[tuple[str, float]], float]] = [
             ("G4", 0.5),
             ("E4", 2.0),
         ],
-        1.0,
+        1.08,
     ),
     (
         136,
@@ -658,53 +659,195 @@ def soften_hz(notes: list[str]) -> list[float]:
     return targets
 
 
+def envelope(samples: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    win = int(0.012 * VOCAL_SR)
+    hop = int(0.004 * VOCAL_SR)
+    if len(samples) <= win:
+        return np.array([0.0]), np.array([0.0])
+    times = []
+    values = []
+    for index in range(0, len(samples) - win, hop):
+        segment = samples[index : index + win]
+        values.append(float(np.sqrt(np.mean(segment * segment))))
+        times.append((index + win / 2) / VOCAL_SR)
+    smooth = np.convolve(np.array(values), np.array([0.25, 0.5, 0.25]), mode="same")
+    return np.array(times), smooth
+
+
+def aligned_spans(
+    samples: np.ndarray,
+    bounds: list[tuple[float, float, str]],
+    chars: list[str],
+) -> list[tuple[float, float]] | None:
+    """Put each character on its own vowel, using the word timing as a fence."""
+    rough = syllable_spans(bounds, chars)
+    if rough is None:
+        return None
+    times, level = envelope(samples)
+    if len(times) < 3:
+        return rough
+    spans: list[tuple[float, float]] = []
+    nuclei: list[float] = []
+    cursor = 0
+    for start, dur, text in bounds:
+        word = [ch for ch in text if "\u4e00" <= ch <= "\u9fff"]
+        if not word:
+            continue
+        pieces = rough[cursor : cursor + len(word)]
+        cursor += len(word)
+        word_nuclei: list[float] = []
+        for piece_start, piece_end in pieces:
+            inside = (times >= piece_start) & (times <= piece_end)
+            if not np.any(inside):
+                word_nuclei.append(0.5 * (piece_start + piece_end))
+                continue
+            choice = int(np.argmax(np.where(inside, level, -1.0)))
+            word_nuclei.append(float(times[choice]))
+        for index, nucleus in enumerate(word_nuclei):
+            left = start if index == 0 else 0.5 * (word_nuclei[index - 1] + nucleus)
+            right = (start + dur) if index == len(word_nuclei) - 1 else 0.5 * (nucleus + word_nuclei[index + 1])
+            if right - left < 0.04:
+                right = left + 0.04
+            spans.append((float(left), float(right)))
+            nuclei.append(nucleus)
+    if len(spans) != len(chars):
+        return rough
+    return spans
+
+
+def resynthesize(samples: np.ndarray, times: np.ndarray, curve: np.ndarray, backend: str) -> np.ndarray:
+    """Apply one continuous pitch curve. The phrase is never cut into pieces."""
+    curve = np.clip(curve, 150.0, 520.0)
+    if backend == "world":
+        frames, frame_times = pw.harvest(samples, float(VOCAL_SR), f0_floor=75.0, f0_ceil=600.0)
+        spectrum = pw.cheaptrick(samples, frames, frame_times, float(VOCAL_SR))
+        aperiodicity = pw.d4c(samples, frames, frame_times, float(VOCAL_SR))
+        sung_f0 = np.interp(frame_times, times, curve)
+        sung_f0[frames <= 0] = 0.0
+        sung = pw.synthesize(sung_f0, spectrum, aperiodicity, float(VOCAL_SR))
+        return np.asarray(sung, dtype=np.float64)
+    sound = parselmouth.Sound(samples, sampling_frequency=VOCAL_SR)
+    manipulation = call(sound, "To Manipulation", 0.008, 75, 600)
+    tier = call(manipulation, "Extract pitch tier")
+    call(tier, "Remove points between", 0, sound.xmax)
+    for time, hz in zip(times, curve):
+        call(tier, "Add point", float(time), float(hz))
+    call([manipulation, tier], "Replace pitch tier")
+    sung = call(manipulation, "Get resynthesis (overlap-add)")
+    return np.asarray(sung.values[0], dtype=np.float64)
+
+
 def sing_phrase(
     samples: np.ndarray,
     spans: list[tuple[float, float]],
     notes: list[str],
-    vowel_weight: float = 0.58,
+    beats: list[float],
+    tone_keep: float = 0.85,
+    shift_limit: float = 4.0,
+    backend: str = "world",
+    protect_within: float = 1.15,
 ) -> np.ndarray:
-    """Glide a whole phrase onto the melody. Do not cut the words apart."""
+    """Glide a whole phrase onto the melody without slicing the words apart."""
     samples = np.ascontiguousarray(samples, dtype=np.float64)
     sound = parselmouth.Sound(samples, sampling_frequency=VOCAL_SR)
-    if sound.duration < 0.2 or len(spans) != len(notes):
+    if sound.duration < 0.2 or len(spans) != len(notes) or len(beats) != len(notes):
         return samples
-    original = sound.to_pitch(time_step=0.01, pitch_floor=75, pitch_ceiling=600)
-    manipulation = call(sound, "To Manipulation", 0.01, 75, 600)
-    tier = call(manipulation, "Extract pitch tier")
-    call(tier, "Remove points between", 0, sound.xmax)
+    original = sound.to_pitch(time_step=0.008, pitch_floor=75, pitch_ceiling=600)
+    times_env, level = envelope(samples)
+    nuclei: list[float] = []
+    for start, end in spans:
+        inside = (times_env >= start) & (times_env <= end)
+        if not np.any(inside):
+            nuclei.append(0.5 * (start + end))
+            continue
+        nuclei.append(float(times_env[int(np.argmax(np.where(inside, level, -1.0)))]))
+
+    step = 0.008
+    times = np.arange(0.012, float(sound.xmax) - 0.012, step)
+    spoken = np.array(
+        [call(original, "Get value at time", float(t), "Hertz", "Linear") for t in times],
+        dtype=np.float64,
+    )
+    residual = np.zeros(len(times), dtype=np.float64)
+    voiced = np.isfinite(spoken) & (spoken > 0)
+    spoken_medians: list[float | None] = []
+    for start, end in spans:
+        region = (times >= start + 0.02) & (times <= end - 0.01) & voiced
+        if int(np.sum(region)) < 3:
+            spoken_medians.append(None)
+            continue
+        preliminary = float(np.median(spoken[region]))
+        believable = region & (np.abs(12.0 * np.log2(np.where(voiced, spoken, preliminary) / preliminary)) < 4.5)
+        if int(np.sum(believable)) >= 3:
+            median = float(np.median(spoken[believable]))
+            residual[believable] = 12.0 * np.log2(spoken[believable] / median)
+        else:
+            median = preliminary
+        spoken_medians.append(median)
+    shifts: list[float] = []
+
     targets = soften_hz(notes)
-    centers = [(start, end, hz) for (start, end), hz in zip(spans, targets)]
-    time = 0.012
-    while time < sound.xmax - 0.012:
-        index = 0
-        for i, (start, _end, _hz) in enumerate(centers):
+    limited: list[float] = []
+    for hz, median in zip(targets, spoken_medians):
+        if median is None or median <= 0:
+            limited.append(hz)
+            shifts.append(0.0)
+            continue
+        shift = float(np.clip(12.0 * np.log2(hz / median), -shift_limit, shift_limit))
+        shifts.append(shift)
+        limited.append(float(median * 2.0 ** (shift / 12.0)))
+    targets = limited
+    curve = np.empty(len(times), dtype=np.float64)
+    for index, time in enumerate(times):
+        syllable = 0
+        for i, (start, _end) in enumerate(spans):
             if time >= start - 0.004:
-                index = i
-        start, end, hz = centers[index]
-        previous = centers[index - 1][2] if index else hz
-        if index and time - start < 0.13:
-            glide = float(np.clip((time - start) / 0.13, 0.0, 1.0))
+                syllable = i
+        start, _end = spans[syllable]
+        hz = targets[syllable]
+        previous = targets[syllable - 1] if syllable else hz
+        glide_end = min(start + 0.07, nuclei[syllable])
+        if syllable and time < glide_end and glide_end > start + 0.02:
+            glide = float(np.clip((time - start) / (glide_end - start), 0.0, 1.0))
             blend = 0.5 - 0.5 * np.cos(np.pi * glide)
             base = previous * (hz / previous) ** blend
         else:
             base = hz
-        spoken = call(original, "Get value at time", float(time), "Hertz", "Linear")
-        if isinstance(spoken, (int, float)) and spoken == spoken and spoken > 0:
-            # The attack keeps her consonant. The vowel settles onto the note.
-            arrived = float(np.clip((time - start) / 0.09, 0.0, 1.0))
-            weight = 0.22 + (vowel_weight - 0.22) * arrived
-            base = float(np.exp(weight * np.log(base) + (1.0 - weight) * np.log(float(spoken))))
-        syllable = end - start
-        if syllable > 0.48 and time > start + 0.2:
-            age = time - (start + 0.2)
-            depth = 0.18 * min(1.0, age / 0.18)
-            base *= 2.0 ** ((depth * np.sin(2.0 * np.pi * 5.2 * age)) / 12.0)
-        call(tier, "Add point", float(time), float(np.clip(base, 150.0, 520.0)))
-        time += 0.012
-    call([manipulation, tier], "Replace pitch tier")
-    sung = call(manipulation, "Get resynthesis (overlap-add)")
-    return np.asarray(sung.values[0], dtype=np.float64)
+        ornament = float(np.clip(residual[index] * tone_keep, -3.0, 3.0))
+        base *= 2.0 ** (ornament / 12.0)
+        if beats[syllable] >= 1.5 and time > nuclei[syllable] + 0.12:
+            age = time - (nuclei[syllable] + 0.12)
+            depth = 0.30 * min(1.0, age / 0.14)
+            base *= 2.0 ** ((depth * np.sin(2.0 * np.pi * 5.4 * age)) / 12.0)
+        curve[index] = base
+    sung = resynthesize(samples, times, curve, backend)
+    return keep_near_syllables(samples, sung, spans, shifts, threshold=protect_within)
+
+
+def keep_near_syllables(
+    original: np.ndarray,
+    sung: np.ndarray,
+    spans: list[tuple[float, float]],
+    shifts: list[float],
+    threshold: float = 1.15,
+) -> np.ndarray:
+    """Leave a syllable spoken when the melody already sits on her pitch."""
+    length = min(len(original), len(sung))
+    mixed = sung[:length].copy()
+    source = original[:length]
+    fade = int(0.018 * VOCAL_SR)
+    for (start, end), shift in zip(spans, shifts):
+        if abs(shift) > threshold:
+            continue
+        left = int(start * VOCAL_SR)
+        right = min(length, int(end * VOCAL_SR))
+        if right - left < fade * 2:
+            continue
+        ramp = np.ones(right - left, dtype=np.float64)
+        ramp[:fade] = np.linspace(0.0, 1.0, fade)
+        ramp[-fade:] = np.linspace(1.0, 0.0, fade)
+        mixed[left:right] = ramp * source[left:right] + (1.0 - ramp) * mixed[left:right]
+    return mixed
 
 
 async def render_vocals(build: Path) -> np.ndarray:
@@ -713,20 +856,24 @@ async def render_vocals(build: Path) -> np.ndarray:
     for index, (start, slot, text, melody, gain) in enumerate(VOCALS):
         chars = [ch for ch in text if "\u4e00" <= ch <= "\u9fff"]
         notes = [name for name, _beats in melody]
+        note_beats = [beats for _name, beats in melody]
         mp3 = build / f"line{index:02d}.mp3"
         wav = build / f"line{index:02d}.wav"
         print(f"sing {text}", flush=True)
         bounds = await synthesize(spoken_text(text), mp3)
         phrase = decode_wav(mp3, wav)
-        spans = syllable_spans(bounds, chars)
+        spans = aligned_spans(phrase, bounds, chars)
         if spans is None or len(spans) != len(notes):
             print(f"  even split for {text}", flush=True)
             audible = np.where(np.abs(phrase) > 0.02 * (np.max(np.abs(phrase)) + 1e-9))[0]
             a = float(audible[0] / VOCAL_SR) if len(audible) else 0.0
             b = float(audible[-1] / VOCAL_SR) if len(audible) else len(phrase) / VOCAL_SR
             spans = [(a + (b - a) * i / len(notes), a + (b - a) * (i + 1) / len(notes)) for i in range(len(notes))]
-        weight = 0.46 if text == "如果星星会读信" else 0.58
-        sung = trim_phrase(sing_phrase(phrase, spans, notes, vowel_weight=weight))
+        if text == "如果星星会读信":
+            # This hook sits higher than her speaking pitch. A smaller lift keeps 读信.
+            sung = trim_phrase(sing_phrase(phrase, spans, notes, note_beats, tone_keep=1.0, shift_limit=1.45))
+        else:
+            sung = trim_phrase(sing_phrase(phrase, spans, notes, note_beats))
         room = slot * BEAT
         if len(sung) / VOCAL_SR > room - 0.05:
             keep = max(int(0.84 * len(sung)), int((room - 0.05) * VOCAL_SR))
@@ -746,7 +893,7 @@ async def render_vocals(build: Path) -> np.ndarray:
 def presence(samples: np.ndarray, sr: int) -> np.ndarray:
     coefficients, denom = butter(2, 1700 / (sr / 2), btype="high")
     bright = lfilter(coefficients, denom, samples)
-    return samples + 0.18 * bright
+    return samples + 0.24 * bright
 
 
 def reverb(samples: np.ndarray, sr: int) -> np.ndarray:
@@ -771,7 +918,7 @@ def mix(vocal_24k: np.ndarray, instrumental: np.ndarray) -> np.ndarray:
     vocal_st = np.stack([vocal, vocal], axis=1)
     env = np.convolve(np.abs(vocal), np.ones(int(0.03 * SR)) / int(0.03 * SR), mode="same")
     level = np.percentile(env[env > 0], 80) if np.any(env > 0) else 1.0
-    duck = 1.0 - 0.48 * np.clip(env / (level + 1e-9), 0.0, 1.0)
+    duck = 1.0 - 0.62 * np.clip(env / (level + 1e-9), 0.0, 1.0)
     instrumental = instrumental * duck[:, None]
     v_peak = np.max(np.abs(vocal_st)) + 1e-9
     i_peak = np.max(np.abs(instrumental)) + 1e-9
