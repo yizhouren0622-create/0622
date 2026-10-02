@@ -5,10 +5,12 @@ The poem is set as a short night song in C major, at 84 BPM:
 intro, two verses, a wind section, a chorus, a walking bridge,
 a quiet final refrain, and a music-box outro.
 
-The vocal keeps Xiaoyi's timbre (zh-CN-XiaoyiNeural, pitch +14 Hz).
-Each syllable is centered on a melody note, then held like a sung vowel.
+The vocal is Xiaoyi (pitch +14 Hz) speaking each line in one breath,
+a little slower, with the rises and falls she already uses.
+Forcing a separate pitch onto every syllable made the words unclear,
+so the tune stays in her own intonation and the band carries the harmony.
 
-Requires ffmpeg, fluidsynth, FluidR3_GM, edge-tts, librosa, and pyworld.
+Requires ffmpeg, fluidsynth, FluidR3_GM, and edge-tts.
 Output: audio/灯下-歌曲.mp3
 """
 
@@ -18,20 +20,17 @@ import asyncio
 import struct
 import subprocess
 import tempfile
-import wave
 from pathlib import Path
 
-import librosa
 import numpy as np
-import pyworld as pw
 import soundfile as sf
 from edge_tts import Communicate
-from scipy.signal import resample_poly
+from scipy.signal import butter, lfilter, resample_poly
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "audio" / "灯下-歌曲.mp3"
 VOICE = "zh-CN-XiaoyiNeural"
-TTS_RATE = "-6%"
+TTS_RATE = "-12%"
 TTS_PITCH = "+14Hz"
 BPM = 84
 SR = 44100
@@ -595,196 +594,81 @@ def decode_wav(mp3: Path, wav: Path) -> np.ndarray:
     return np.asarray(audio, dtype=np.float64)
 
 
-def f0_median(samples: np.ndarray) -> float:
-    if len(samples) < int(0.05 * VOCAL_SR):
-        return 0.0
-    f0, _times = pw.harvest(
-        samples.astype(np.float64),
-        VOCAL_SR,
-        f0_floor=80.0,
-        f0_ceil=750.0,
-        frame_period=5.0,
-    )
-    voiced = f0[f0 > 0]
-    if len(voiced) < 3:
-        return 0.0
-    return float(np.median(voiced))
+def trim_phrase(samples: np.ndarray) -> np.ndarray:
+    peak = np.max(np.abs(samples)) + 1e-9
+    audible = np.where(np.abs(samples) > 0.02 * peak)[0]
+    if len(audible) == 0:
+        return samples
+    start = max(0, int(audible[0]) - int(0.02 * VOCAL_SR))
+    end = min(len(samples), int(audible[-1]) + int(0.05 * VOCAL_SR))
+    trimmed = samples[start:end].copy()
+    fade_in = min(len(trimmed) // 5, int(0.012 * VOCAL_SR))
+    fade_out = min(len(trimmed) // 4, int(0.03 * VOCAL_SR))
+    if fade_in > 1:
+        trimmed[:fade_in] *= np.linspace(0.0, 1.0, fade_in)
+    if fade_out > 1:
+        trimmed[-fade_out:] *= np.linspace(1.0, 0.0, fade_out)
+    return trimmed
 
 
-def align_chars(samples: np.ndarray, bounds: list[tuple[float, float, str]], chars: list[str]) -> list[tuple[int, int]]:
-    joined = "".join(ch for _s, _d, text in bounds for ch in text if "\u4e00" <= ch <= "\u9fff")
-    if joined == "".join(chars):
-        spans: list[tuple[int, int]] = []
-        for start, dur, text in bounds:
-            word = [ch for ch in text if "\u4e00" <= ch <= "\u9fff"]
-            a = int(start * VOCAL_SR)
-            b = min(len(samples), int((start + dur) * VOCAL_SR))
-            if len(word) <= 1:
-                spans.append((a, max(a + 1, b)))
-                continue
-            seg = samples[a:b]
-            hop = max(1, int(0.008 * VOCAL_SR))
-            env = np.array(
-                [np.sqrt(np.mean(seg[i : i + hop] ** 2) + 1e-12) for i in range(0, max(1, len(seg) - hop), hop)]
-            )
-            if len(env) > 5:
-                env = np.convolve(env, np.ones(5) / 5, mode="same")
-            cuts = [0]
-            for k in range(1, len(word)):
-                lo = int(len(env) * (k - 0.28) / len(word))
-                hi = int(len(env) * (k + 0.28) / len(word))
-                lo = max(cuts[-1] + 1, lo)
-                hi = max(lo + 1, min(len(env) - 1, hi))
-                cuts.append(lo + int(np.argmin(env[lo:hi])))
-            cuts.append(len(env))
-            for i in range(len(word)):
-                s = a + cuts[i] * hop
-                e = a + min(len(seg), cuts[i + 1] * hop)
-                spans.append((max(0, s), max(s + 1, e)))
-        return spans
-
-    # Fall back to valleys across the whole phrase.
-    trimmed = np.where(np.abs(samples) > 0.02 * np.max(np.abs(samples) + 1e-9))[0]
-    a = int(trimmed[0]) if len(trimmed) else 0
-    b = int(trimmed[-1]) if len(trimmed) else len(samples)
-    seg = samples[a:b]
-    hop = max(1, int(0.008 * VOCAL_SR))
-    env = np.array(
-        [np.sqrt(np.mean(seg[i : i + hop] ** 2) + 1e-12) for i in range(0, max(1, len(seg) - hop), hop)]
-    )
-    cuts = [0]
-    for k in range(1, len(chars)):
-        lo = int(len(env) * (k - 0.3) / len(chars))
-        hi = int(len(env) * (k + 0.3) / len(chars))
-        lo = max(cuts[-1] + 1, lo)
-        hi = max(lo + 1, min(len(env) - 1, hi))
-        cuts.append(lo + int(np.argmin(env[lo:hi])))
-    cuts.append(len(env))
-    spans = []
-    for i in range(len(chars)):
-        s = a + cuts[i] * hop
-        e = a + min(len(seg), cuts[i + 1] * hop)
-        spans.append((max(0, s), max(s + 1, e)))
-    return spans
+# How each line is actually spoken. Commas are breaths she already has in the poem.
+# A few words are lengthened only where the short form collapses into another word.
+SPOKEN = {
+    "请替我寄出这一页": "请替我寄出去，这一页。",
+    "我就在字里": "我就在字里面。",
+    "一盏灯守着未完成的句子": "一盏灯，守着未完成的句子。",
+    "只把灯芯拧得更亮一些": "只把灯芯，拧得更亮一些。",
+    "它经过桥经过月色": "它经过桥，经过月色。",
+    "人间秋天你的窗前": "人间，秋天，你的窗前。",
+    "安静地陪你到天亮": "安静地，陪你到天亮。",
+    "那些来不及说的话": "那些来不及说的话。",
+}
 
 
-def fade(samples: np.ndarray, fade_in: float = 0.01, fade_out: float = 0.04) -> np.ndarray:
-    out = samples.copy()
-    fi = min(len(out) // 4, int(fade_in * VOCAL_SR))
-    fo = min(len(out) // 3, int(fade_out * VOCAL_SR))
-    if fi > 1:
-        out[:fi] *= np.linspace(0.0, 1.0, fi)
-    if fo > 1:
-        out[-fo:] *= np.linspace(1.0, 0.0, fo)
-    return out
+def spoken_text(text: str) -> str:
+    if text in SPOKEN:
+        return SPOKEN[text]
+    return text if text.endswith("。") else f"{text}。"
 
 
-def sing_slice(slice_y: np.ndarray, target_hz: float, target_n: int, fallback_f0: float) -> tuple[np.ndarray, float]:
-    context = slice_y.astype(np.float64)
-    med = f0_median(context) or fallback_f0 or target_hz
-    steps = float(np.clip(12.0 * np.log2(target_hz / med), -9.0, 10.0))
-    shifted = librosa.effects.pitch_shift(context.astype(np.float32), sr=VOCAL_SR, n_steps=steps)
-    shifted = np.asarray(shifted, dtype=np.float64)
-    thr = 0.025 * (np.max(np.abs(shifted)) + 1e-9)
-    nz = np.where(np.abs(shifted) > thr)[0]
-    if len(nz):
-        shifted = shifted[max(0, nz[0] - int(0.008 * VOCAL_SR)) : min(len(shifted), nz[-1] + int(0.025 * VOCAL_SR))]
-    natural = min(len(shifted), target_n)
-    out = np.zeros(target_n, dtype=np.float64)
-    out[:natural] = shifted[:natural]
-    if natural < target_n - int(0.03 * VOCAL_SR) and len(shifted) > int(0.07 * VOCAL_SR):
-        f0, _t = pw.harvest(shifted, VOCAL_SR, f0_floor=80.0, f0_ceil=750.0, frame_period=5.0)
-        sp = pw.cheaptrick(shifted, f0, _t, VOCAL_SR)
-        ap = pw.d4c(shifted, f0, _t, VOCAL_SR)
-        rms = sp.mean(axis=1)
-        voiced = np.where(f0 > 0)[0]
-        if len(voiced):
-            late = voiced[voiced > len(f0) * 0.3]
-            if len(late) == 0:
-                late = voiced
-            best = int(late[np.argmax(rms[late])])
-            need = target_n - natural + int(0.045 * VOCAL_SR)
-            frames = max(4, int(need / VOCAL_SR * 1000.0 / 5.0))
-            times = np.arange(frames) * 0.005
-            vibrato = 1.0 + 0.014 * np.sin(2 * np.pi * 5.2 * times) * np.clip(times / 0.22, 0.0, 1.0)
-            f0s = target_hz * vibrato
-            tail = pw.synthesize(
-                f0s.astype(np.float64),
-                np.repeat(sp[best : best + 1], frames, axis=0),
-                np.clip(np.repeat(ap[best : best + 1], frames, axis=0) * 0.55, 0.0, 1.0),
-                VOCAL_SR,
-                5.0,
-            )
-            cf = min(int(0.04 * VOCAL_SR), natural, len(tail))
-            start = natural - cf
-            seg = tail[: target_n - start]
-            if cf > 1:
-                ramp = np.linspace(0.0, 1.0, cf)
-                out[start : start + cf] = out[start : start + cf] * (1.0 - ramp) + seg[:cf] * ramp
-                if len(seg) > cf:
-                    out[start + cf : start + len(seg)] = seg[cf:]
-            else:
-                out[start : start + len(seg)] = seg
-    out = fade(out)
-    got = f0_median(out[int(0.03 * VOCAL_SR) : max(int(0.03 * VOCAL_SR) + 8, int(len(out) * 0.75))])
-    cents = 1200.0 * np.log2(got / target_hz) if got else 999.0
-    if got and abs(cents) > 35:
-        corr = float(np.clip(-cents / 100.0, -3.0, 3.0))
-        fixed = librosa.effects.pitch_shift(out.astype(np.float32), sr=VOCAL_SR, n_steps=corr)
-        fixed = np.asarray(fixed, dtype=np.float64)
-        if len(fixed) < target_n:
-            fixed = np.pad(fixed, (0, target_n - len(fixed)))
-        out = fade(fixed[:target_n])
-        got = f0_median(out[int(0.03 * VOCAL_SR) : max(int(0.03 * VOCAL_SR) + 8, int(len(out) * 0.75))])
-        cents = 1200.0 * np.log2(got / target_hz) if got else 999.0
-    peak = np.max(np.abs(out)) + 1e-9
-    if peak > 0.95:
-        out *= 0.95 / peak
-    return out, cents
-
-
-async def render_vocals(build: Path) -> tuple[np.ndarray, list[float]]:
+async def render_vocals(build: Path) -> np.ndarray:
     total = int((TOTAL_BEATS * BEAT + 1.2) * VOCAL_SR)
     mix = np.zeros(total, dtype=np.float64)
-    cents: list[float] = []
-    for index, (start, _slot, text, melody, gain) in enumerate(VOCALS):
-        chars = [c for c in text if "\u4e00" <= c <= "\u9fff"]
+    for index, (start, slot, text, _melody, gain) in enumerate(VOCALS):
         mp3 = build / f"line{index:02d}.mp3"
         wav = build / f"line{index:02d}.wav"
         print(f"sing {text}", flush=True)
-        bounds = await synthesize(text, mp3)
-        phrase = decode_wav(mp3, wav)
-        fallback = f0_median(phrase) or 325.0
-        spans = align_chars(phrase, bounds, chars)
-        if len(spans) != len(chars):
-            raise RuntimeError(f"{text}: aligned {len(spans)} slices for {len(chars)} characters")
-        cursor = start
-        for (a, b), ch, (name, beats) in zip(spans, chars, melody):
-            target_n = max(int(0.12 * VOCAL_SR), int(beats * BEAT * VOCAL_SR))
-            ctx = int(0.03 * VOCAL_SR)
-            sl = phrase[max(0, a - ctx) : min(len(phrase), b + ctx)]
-            note, err = sing_slice(sl, NOTE_HZ[name], target_n, fallback)
-            note *= gain
-            at = int(cursor * BEAT * VOCAL_SR)
-            end = at + len(note)
-            if end > len(mix):
-                mix = np.pad(mix, (0, end - len(mix) + VOCAL_SR))
-            mix[at:end] += note
-            cents.append(err)
-            cursor += beats
-            del ch
-    return mix, cents
+        await synthesize(spoken_text(text), mp3)
+        sung = trim_phrase(decode_wav(mp3, wav))
+        room = slot * BEAT
+        if len(sung) / VOCAL_SR > room - 0.05:
+            keep = max(int(0.84 * len(sung)), int((room - 0.05) * VOCAL_SR))
+            sung = sung[:keep].copy()
+            fade_out = min(len(sung) // 4, int(0.04 * VOCAL_SR))
+            if fade_out > 1:
+                sung[-fade_out:] *= np.linspace(1.0, 0.0, fade_out)
+            print(f"  shortened {text} to fit the phrase", flush=True)
+        sung *= gain
+        at = int(start * BEAT * VOCAL_SR)
+        end = at + len(sung)
+        if end > len(mix):
+            mix = np.pad(mix, (0, end - len(mix) + VOCAL_SR))
+        mix[at:end] += sung
+    return mix
+
+
+def presence(samples: np.ndarray, sr: int) -> np.ndarray:
+    coefficients, denom = butter(2, 1700 / (sr / 2), btype="high")
+    bright = lfilter(coefficients, denom, samples)
+    return samples + 0.18 * bright
 
 
 def reverb(samples: np.ndarray, sr: int) -> np.ndarray:
     wet = np.zeros_like(samples)
-    for delay, gain in ((0.029, 0.20), (0.047, 0.15), (0.071, 0.10), (0.097, 0.07)):
+    for delay, gain in ((0.023, 0.16), (0.037, 0.10)):
         shift = int(delay * sr)
         wet[shift:] += gain * samples[:-shift]
-    echo = int(0.083 * sr)
-    tail = np.zeros_like(samples)
-    tail[echo:] += 0.28 * wet[:-echo]
-    return samples + 0.18 * (wet + tail)
+    return samples + 0.05 * wet
 
 
 def mix(vocal_24k: np.ndarray, instrumental: np.ndarray) -> np.ndarray:
@@ -796,21 +680,16 @@ def mix(vocal_24k: np.ndarray, instrumental: np.ndarray) -> np.ndarray:
         instrumental = np.pad(instrumental, ((0, n - len(instrumental)), (0, 0)))
     vocal = vocal[:n]
     instrumental = instrumental[:n]
+    vocal = presence(vocal, SR)
     vocal = reverb(vocal, SR)
-    # Keep the voice close and a little wider than a dry mono track.
-    delay = int(0.007 * SR)
-    right = np.pad(vocal, (delay, 0))[:n] * 0.88
-    vocal_st = np.stack([vocal, right], axis=1)
-    env = np.abs(vocal)
-    win = np.ones(int(0.04 * SR)) / int(0.04 * SR)
-    smooth = np.convolve(env, win, mode="same")
-    level = np.percentile(smooth[smooth > 0], 85) if np.any(smooth > 0) else 1.0
-    duck = 1.0 - 0.28 * np.clip(smooth / (level + 1e-9), 0.0, 1.0)
+    vocal_st = np.stack([vocal, vocal], axis=1)
+    env = np.convolve(np.abs(vocal), np.ones(int(0.03 * SR)) / int(0.03 * SR), mode="same")
+    level = np.percentile(env[env > 0], 80) if np.any(env > 0) else 1.0
+    duck = 1.0 - 0.48 * np.clip(env / (level + 1e-9), 0.0, 1.0)
     instrumental = instrumental * duck[:, None]
-    # Vocal sits forward; the bed stays under the lyric.
     v_peak = np.max(np.abs(vocal_st)) + 1e-9
     i_peak = np.max(np.abs(instrumental)) + 1e-9
-    mixed = vocal_st / v_peak * 0.82 + instrumental / i_peak * 0.46
+    mixed = vocal_st / v_peak * 0.96 + instrumental / i_peak * 0.30
     peak = np.max(np.abs(mixed)) + 1e-9
     mixed *= 0.89 / peak
     fade_n = int(0.4 * SR)
@@ -860,13 +739,7 @@ async def main() -> None:
             raise RuntimeError(f"instrumental sample rate {isr}")
         if instrumental.ndim == 1:
             instrumental = np.stack([instrumental, instrumental], axis=1)
-        vocal, cents = await render_vocals(build)
-        good = [c for c in cents if c < 900]
-        off = sum(abs(c) > 80 for c in good)
-        print(
-            f"pitch: {len(good)} notes, median error {np.median(np.abs(good)):.1f} cents, {off} off by >80",
-            flush=True,
-        )
+        vocal = await render_vocals(build)
         mixed = mix(vocal, instrumental.astype(np.float64))
         wav_out = build / "song.wav"
         sf.write(wav_out, mixed, SR)
