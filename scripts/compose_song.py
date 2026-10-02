@@ -5,12 +5,12 @@ The poem is set as a short night song in C major, at 84 BPM:
 intro, two verses, a wind section, a chorus, a walking bridge,
 a quiet final refrain, and a music-box outro.
 
-The vocal is Xiaoyi (pitch +14 Hz) speaking each line in one breath,
-a little slower, with the rises and falls she already uses.
-Forcing a separate pitch onto every syllable made the words unclear,
-so the tune stays in her own intonation and the band carries the harmony.
+The vocal is Xiaoyi singing, not reading. Each line stays one phrase.
+Praat glides the pitch onto the melody, holds the vowel, and adds a
+little vibrato, the way a pop vocal sits on a tune. Consonants keep
+more of her original pitch so the words do not fall apart.
 
-Requires ffmpeg, fluidsynth, FluidR3_GM, and edge-tts.
+Requires ffmpeg, fluidsynth, FluidR3_GM, edge-tts, and praat-parselmouth.
 Output: audio/灯下-歌曲.mp3
 """
 
@@ -23,14 +23,16 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
+import parselmouth
 import soundfile as sf
 from edge_tts import Communicate
+from parselmouth.praat import call
 from scipy.signal import butter, lfilter, resample_poly
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "audio" / "灯下-歌曲.mp3"
 VOICE = "zh-CN-XiaoyiNeural"
-TTS_RATE = "-12%"
+TTS_RATE = "-6%"
 TTS_PITCH = "+14Hz"
 BPM = 84
 SR = 44100
@@ -384,7 +386,7 @@ VOCALS: list[tuple[float, float, str, list[tuple[str, float]], float]] = [
         16,
         "陪你到天亮",
         [("G4", 0.75), ("A4", 0.75), ("B4", 1.0), ("C5", 1.5), ("G4", 4.0)],
-        0.7,
+        0.92,
     ),
 ]
 
@@ -614,14 +616,12 @@ def trim_phrase(samples: np.ndarray) -> np.ndarray:
 # How each line is actually spoken. Commas are breaths she already has in the poem.
 # A few words are lengthened only where the short form collapses into another word.
 SPOKEN = {
-    "请替我寄出这一页": "请替我寄出去，这一页。",
-    "我就在字里": "我就在字里面。",
     "一盏灯守着未完成的句子": "一盏灯，守着未完成的句子。",
     "只把灯芯拧得更亮一些": "只把灯芯，拧得更亮一些。",
     "它经过桥经过月色": "它经过桥，经过月色。",
     "人间秋天你的窗前": "人间，秋天，你的窗前。",
     "安静地陪你到天亮": "安静地，陪你到天亮。",
-    "那些来不及说的话": "那些来不及说的话。",
+    "请替我寄出这一页": "请替我寄出，这一页。",
 }
 
 
@@ -631,15 +631,102 @@ def spoken_text(text: str) -> str:
     return text if text.endswith("。") else f"{text}。"
 
 
+def syllable_spans(bounds: list[tuple[float, float, str]], chars: list[str]) -> list[tuple[float, float]] | None:
+    joined = "".join(ch for _s, _d, text in bounds for ch in text if "\u4e00" <= ch <= "\u9fff")
+    if joined != "".join(chars):
+        return None
+    spans: list[tuple[float, float]] = []
+    for start, dur, text in bounds:
+        word = [ch for ch in text if "\u4e00" <= ch <= "\u9fff"]
+        if not word:
+            continue
+        for i in range(len(word)):
+            spans.append((start + dur * i / len(word), start + dur * (i + 1) / len(word)))
+    return spans
+
+
+def soften_hz(notes: list[str]) -> list[float]:
+    """Stepwise tune inside her speaking range, so the line can actually be sung."""
+    prev = NOTE_HZ["E4"]
+    targets: list[float] = []
+    for name in notes:
+        hz = float(np.clip(NOTE_HZ[name], NOTE_HZ["D4"], NOTE_HZ["A4"]))
+        leap = float(np.clip(12.0 * np.log2(hz / prev), -4.0, 4.0))
+        hz = float(np.clip(prev * 2.0 ** (leap / 12.0), NOTE_HZ["D4"], NOTE_HZ["A4"]))
+        targets.append(hz)
+        prev = hz
+    return targets
+
+
+def sing_phrase(
+    samples: np.ndarray,
+    spans: list[tuple[float, float]],
+    notes: list[str],
+    vowel_weight: float = 0.58,
+) -> np.ndarray:
+    """Glide a whole phrase onto the melody. Do not cut the words apart."""
+    samples = np.ascontiguousarray(samples, dtype=np.float64)
+    sound = parselmouth.Sound(samples, sampling_frequency=VOCAL_SR)
+    if sound.duration < 0.2 or len(spans) != len(notes):
+        return samples
+    original = sound.to_pitch(time_step=0.01, pitch_floor=75, pitch_ceiling=600)
+    manipulation = call(sound, "To Manipulation", 0.01, 75, 600)
+    tier = call(manipulation, "Extract pitch tier")
+    call(tier, "Remove points between", 0, sound.xmax)
+    targets = soften_hz(notes)
+    centers = [(start, end, hz) for (start, end), hz in zip(spans, targets)]
+    time = 0.012
+    while time < sound.xmax - 0.012:
+        index = 0
+        for i, (start, _end, _hz) in enumerate(centers):
+            if time >= start - 0.004:
+                index = i
+        start, end, hz = centers[index]
+        previous = centers[index - 1][2] if index else hz
+        if index and time - start < 0.13:
+            glide = float(np.clip((time - start) / 0.13, 0.0, 1.0))
+            blend = 0.5 - 0.5 * np.cos(np.pi * glide)
+            base = previous * (hz / previous) ** blend
+        else:
+            base = hz
+        spoken = call(original, "Get value at time", float(time), "Hertz", "Linear")
+        if isinstance(spoken, (int, float)) and spoken == spoken and spoken > 0:
+            # The attack keeps her consonant. The vowel settles onto the note.
+            arrived = float(np.clip((time - start) / 0.09, 0.0, 1.0))
+            weight = 0.22 + (vowel_weight - 0.22) * arrived
+            base = float(np.exp(weight * np.log(base) + (1.0 - weight) * np.log(float(spoken))))
+        syllable = end - start
+        if syllable > 0.48 and time > start + 0.2:
+            age = time - (start + 0.2)
+            depth = 0.18 * min(1.0, age / 0.18)
+            base *= 2.0 ** ((depth * np.sin(2.0 * np.pi * 5.2 * age)) / 12.0)
+        call(tier, "Add point", float(time), float(np.clip(base, 150.0, 520.0)))
+        time += 0.012
+    call([manipulation, tier], "Replace pitch tier")
+    sung = call(manipulation, "Get resynthesis (overlap-add)")
+    return np.asarray(sung.values[0], dtype=np.float64)
+
+
 async def render_vocals(build: Path) -> np.ndarray:
     total = int((TOTAL_BEATS * BEAT + 1.2) * VOCAL_SR)
     mix = np.zeros(total, dtype=np.float64)
-    for index, (start, slot, text, _melody, gain) in enumerate(VOCALS):
+    for index, (start, slot, text, melody, gain) in enumerate(VOCALS):
+        chars = [ch for ch in text if "\u4e00" <= ch <= "\u9fff"]
+        notes = [name for name, _beats in melody]
         mp3 = build / f"line{index:02d}.mp3"
         wav = build / f"line{index:02d}.wav"
         print(f"sing {text}", flush=True)
-        await synthesize(spoken_text(text), mp3)
-        sung = trim_phrase(decode_wav(mp3, wav))
+        bounds = await synthesize(spoken_text(text), mp3)
+        phrase = decode_wav(mp3, wav)
+        spans = syllable_spans(bounds, chars)
+        if spans is None or len(spans) != len(notes):
+            print(f"  even split for {text}", flush=True)
+            audible = np.where(np.abs(phrase) > 0.02 * (np.max(np.abs(phrase)) + 1e-9))[0]
+            a = float(audible[0] / VOCAL_SR) if len(audible) else 0.0
+            b = float(audible[-1] / VOCAL_SR) if len(audible) else len(phrase) / VOCAL_SR
+            spans = [(a + (b - a) * i / len(notes), a + (b - a) * (i + 1) / len(notes)) for i in range(len(notes))]
+        weight = 0.46 if text == "如果星星会读信" else 0.58
+        sung = trim_phrase(sing_phrase(phrase, spans, notes, vowel_weight=weight))
         room = slot * BEAT
         if len(sung) / VOCAL_SR > room - 0.05:
             keep = max(int(0.84 * len(sung)), int((room - 0.05) * VOCAL_SR))
@@ -647,7 +734,6 @@ async def render_vocals(build: Path) -> np.ndarray:
             fade_out = min(len(sung) // 4, int(0.04 * VOCAL_SR))
             if fade_out > 1:
                 sung[-fade_out:] *= np.linspace(1.0, 0.0, fade_out)
-            print(f"  shortened {text} to fit the phrase", flush=True)
         sung *= gain
         at = int(start * BEAT * VOCAL_SR)
         end = at + len(sung)
@@ -665,10 +751,10 @@ def presence(samples: np.ndarray, sr: int) -> np.ndarray:
 
 def reverb(samples: np.ndarray, sr: int) -> np.ndarray:
     wet = np.zeros_like(samples)
-    for delay, gain in ((0.023, 0.16), (0.037, 0.10)):
+    for delay, gain in ((0.026, 0.18), (0.043, 0.12), (0.071, 0.07)):
         shift = int(delay * sr)
         wet[shift:] += gain * samples[:-shift]
-    return samples + 0.05 * wet
+    return samples + 0.08 * wet
 
 
 def mix(vocal_24k: np.ndarray, instrumental: np.ndarray) -> np.ndarray:
